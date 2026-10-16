@@ -1,0 +1,72 @@
+{
+    "id": "v1-M-2",
+    "instruction": "Design a PLC program using structured text (ST code) that includes a function block named `F_CollectInput` and a main program named `MAIN`.\n\nThe main program begins by invoking the `CollectInput` function block to gather input signals (`IN1`, `IN2`, `IN3`, `IN4`, and `IN5`) into a Boolean array called `Data`. Once data collection is complete, indicated by the `Finished` flag from the function block, the program sets a `Ready` flag to signal readiness for further processing.\n\nUpon readiness, the program calculates an output signal `Out` based on complex logical conditions:\nNOT (A1 OR A2 OR A3 OR ... OR A15)  , where the A1 to A15 satisfy:\n\n```plain\nA1 = NOT (Data[7]) AND NOT (Data[3]) AND NOT (Data[2]) AND NOT (Data[1]) OR Data[5];\nA2 = Data[7] AND NOT (Data[3]) AND NOT (Data[2]) AND NOT (Data[1]) OR Data[6];\nA3 = NOT (Data[7]) AND Data[3] AND NOT (Data[2]) AND NOT (Data[1]) OR Data[12];\nA4 = Data[7] AND Data[3] AND NOT (Data[2]) AND NOT (Data[1]) OR Data[8];\nA5 = NOT (Data[7]) AND NOT (Data[3]) AND Data[2] AND NOT (Data[1]) OR Data[4];\nA6 = Data[7] AND NOT (Data[3]) AND Data[2] AND NOT (Data[1]) OR Data[9];\nA7 = NOT (Data[7]) AND Data[3] AND Data[2] AND NOT (Data[1]) OR Data[10];\nA8 = Data[7] AND Data[3] AND Data[2] AND NOT (Data[1]) OR Data[16];\nA9 = NOT (Data[7]) AND NOT (Data[3]) AND NOT (Data[2]) AND Data[1] OR Data[11];\nA10 = Data[7] AND NOT (Data[3]) AND NOT (Data[2]) AND Data[1] OR Data[14];\nA11 = NOT (Data[7]) AND Data[3] AND NOT (Data[2]) AND Data[1] OR Data[17];\nA12 = Data[7] AND Data[3] AND NOT (Data[2]) AND Data[1] OR Data[18];\nA13 = NOT (Data[7]) AND NOT (Data[3]) AND Data[2] AND Data[1] OR Data[13];\nA14 = Data[7] AND NOT (Data[3]) AND Data[2] AND Data[1] OR Data[20];\nA15 = NOT (Data[7]) AND Data[3] AND Data[2] AND Data[1] OR Data[15];\n```\n\nSystem evaluate the values stored in the `Data` array.\nThen the output readiness flag `OutReady` is set to true, indicating that the system is prepared to produce the final output.\n\nFinally, after the output is calculated, the program resets the `CollectInput` function block to prepare for the next\nround of data collection by setting the `RESET` flag to true.\n\nThe program includes a function block named `F_CollectInput`,\nwhich collects multiple input signals (`IN1`, `IN2`, `IN3`, `IN4`, and `IN5`)\ninto a Boolean array called `Data` during each cycle when triggered by a clock signal `TICK`.\nThe data collection occurs only when the `RESET` signal is not activated,\nensuring that the system captures inputs correctly.\n\nWhen the system captures data, it stores the input values in `Data`,\nupdates the index for future data collection,\nand sets the `Finished` output flag to indicate when the data array is fully populated (after 20 inputs).\nIf a reset is initiated, the index is reset, and the previous data collection is cleared,\nreadying the system for a new set of inputs.\n\n\nFUNCTION_BLOCK F_CollectInput\nVAR_IN_OUT\nData : ARRAY[1 .. 20] OF BOOL;\nEND_VAR\nVAR_INPUT\nTICK  : BOOL := 0;\nIN1   : BOOL := 0;\nIN2   : BOOL := 0;\nIN3   : BOOL := 0;\nIN4   : BOOL := 0;\nIN5   : BOOL := 0;\nRESET : BOOL := FALSE;\nEND_VAR\nVAR_OUTPUT\nFinished : BOOL;\nEND_VAR\nVAR\nj    : USINT := 1;\ntock : BOOL  := 0;\nEND_VAR\n\nEND_FUNCTION_BLOCK\n\nPROGRAM MAIN\nVAR\nData  : ARRAY[1 .. 20] OF BOOL;\nReady : BOOL;\nCollectInput : F_CollectInput;\nEND_VAR\nVAR\nTICK     : BOOL;\nIN1      : BOOL;\nIN2      : BOOL;\nIN3      : BOOL;\nIN4      : BOOL;\nIN5      : BOOL;\nOutReady : BOOL := FALSE;\nFeedNext : BOOL := FALSE;\nOut      : BOOL;\nEND_VAR\n\nEND_PROGRAM",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Verify that the Data array is not accessed out of bounds.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.j >= 1 AND instance.j <= 21"
+                },
+                "pattern_description": "'instance.j >= 1 AND instance.j <= 20' is always true at the end of the PLC cycle.",
+                "entry_point": "F_CollectInput"
+            }
+        },
+        {
+            "property_description": "Verify that the Finished flag is set correctly when the Data array is fully populated.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.Finished = (instance.j > 20)"
+                },
+                "pattern_description": "'instance.Finished = (instance.j > 20)' is always true at the end of the PLC cycle.",
+                "entry_point": "F_CollectInput"
+            }
+        },
+        {
+            "property_description": "Verify that the Out flag is computed correctly based on the logical conditions specified.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.Out = (((((((((((((((((NOT ((((NOT instance.Data[7]) AND (NOT instance.Data[3])) AND (NOT instance.Data[2])) AND (NOT instance.Data[1]))) OR instance.Data[5]) AND ((NOT (((instance.Data[7] AND (NOT instance.Data[3])) AND (NOT instance.Data[2])) AND (NOT instance.Data[1]))) OR instance.Data[6])) AND ((NOT ((((NOT instance.Data[7]) AND instance.Data[3]) AND (NOT instance.Data[2])) AND (NOT instance.Data[1]))) OR instance.Data[12])) AND ((NOT (((instance.Data[7] AND instance.Data[3]) AND (NOT instance.Data[2])) AND (NOT instance.Data[1]))) OR instance.Data[8])) AND ((NOT ((((NOT instance.Data[7]) AND (NOT instance.Data[3])) AND instance.Data[2]) AND (NOT instance.Data[1]))) OR instance.Data[4])) AND ((NOT (((instance.Data[7] AND (NOT instance.Data[3])) AND instance.Data[2]) AND (NOT instance.Data[1]))) OR instance.Data[9])) AND ((NOT ((((NOT instance.Data[7]) AND instance.Data[3]) AND instance.Data[2]) AND (NOT instance.Data[1]))) OR instance.Data[10])) AND ((NOT (((instance.Data[7] AND instance.Data[3]) AND instance.Data[2]) AND (NOT instance.Data[1]))) OR instance.Data[16])) AND ((NOT ((((NOT instance.Data[7]) AND (NOT instance.Data[3])) AND (NOT instance.Data[2])) AND instance.Data[1])) OR instance.Data[11])) AND ((NOT (((instance.Data[7] AND (NOT instance.Data[3])) AND (NOT instance.Data[2])) AND instance.Data[1])) OR instance.Data[14])) AND ((NOT ((((NOT instance.Data[7]) AND instance.Data[3]) AND (NOT instance.Data[2])) AND instance.Data[1])) OR instance.Data[17])) AND ((NOT (((instance.Data[7] AND instance.Data[3]) AND (NOT instance.Data[2])) AND instance.Data[1])) OR instance.Data[18])) AND ((NOT ((((NOT instance.Data[7]) AND (NOT instance.Data[3])) AND instance.Data[2]) AND instance.Data[1])) OR instance.Data[13])) AND ((NOT (((instance.Data[7] AND (NOT instance.Data[3])) AND instance.Data[2]) AND instance.Data[1])) OR instance.Data[20])) AND ((NOT ((((NOT instance.Data[7]) AND instance.Data[3]) AND instance.Data[2]) AND instance.Data[1])) OR instance.Data[15])) AND ((NOT (((instance.Data[7] AND instance.Data[3]) AND instance.Data[2]) AND instance.Data[1])) OR instance.Data[19]))"
+                },
+                "pattern_description": "{1} is always true at the end of the PLC cycle.",
+                "entry_point": "F_CollectInput"
+            }
+        },
+        {
+            "property_description": "Verify that the OutReady flag is set to TRUE when the output processing is complete.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.OutReady = (instance.Ready AND instance.Out)"
+                },
+                "pattern_description": "'instance.OutReady = (instance.Ready AND instance.Out)' is always true at the end of the PLC cycle.",
+                "entry_point": "F_CollectInput"
+            }
+        },
+        {
+            "property_description": "Verify that the RESET functionality works correctly and resets the state of the F_CollectInput function block.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.RESET = TRUE --> instance.j = 1 AND instance.tock = 0"
+                },
+                "pattern_description": "'instance.RESET = TRUE --> instance.j = 1 AND instance.tock = 0' is always true at the end of the PLC cycle.",
+                "entry_point": "F_CollectInput"
+            }
+        }
+    ]
+}

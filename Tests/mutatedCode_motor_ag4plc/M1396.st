@@ -1,0 +1,23 @@
+FUNCTION_BLOCK "FB_MotorControl"
+
+VAR_INPUT
+    Pressure_LOW : DINT;
+END_VAR
+
+VAR_OUTPUT
+    Motor_Critical : BOOL;
+END_VAR
+
+VAR
+    Threshold : DINT := 36464;
+END_VAR
+
+BEGIN
+
+    IF Pressure_LOW < Threshold THEN
+        Motor_Critical := NOT (TRUE); (* MUTATED: ASSIGN_NEGATE *)
+    ELSE
+        Motor_Critical := FALSE;
+    END_IF;
+
+END_FUNCTION_BLOCK

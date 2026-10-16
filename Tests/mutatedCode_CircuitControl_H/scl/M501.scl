@@ -1,0 +1,85 @@
+FUNCTION_BLOCK "FB_CircuitControl"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+
+VAR_INPUT
+    Reset_All_CB : Bool;
+    Current_Fault_on_TRSF1 : Int;
+    Current_Fault_on_66BUS1 : Int;
+END_VAR
+
+VAR_OUTPUT
+    Short_Circuit_TRSF1 : Bool;
+    Short_Circuit_66BUS : Bool;
+    Open_CB1_66KV : Bool;
+    Open_CB2_66KV : Bool;
+    Open_CB_TRSF1 : Bool;
+    Open_CB2_22KV : Bool;
+END_VAR
+
+VAR
+    Current_CB1_66KV : Int;
+    Current_CB2_66KV : Int;
+    Current_TRSF1_W1 : Int;
+    Current_TRSF1_W2 : Int;
+    Current_CB_TRSF1 : Int;
+    Current_CB2_22KV : Int;
+    Threshold500 : Int := 500;
+    GT15_OUT : Bool;
+    GT4_OUT : Bool;
+END_VAR
+
+BEGIN
+
+    // ---------------------------------------------------------------
+    // a) Short-circuit detection (strictly greater than the threshold)
+    // ---------------------------------------------------------------
+    #GT15_OUT := #Current_Fault_on_66BUS1 > #Threshold500;
+    #Short_Circuit_66BUS := #GT15_OUT;
+
+    #GT4_OUT := #Current_Fault_on_TRSF1 > #Threshold500;
+    #Short_Circuit_TRSF1 := #GT4_OUT;
+
+    // ---------------------------------------------------------------
+    // b) Circuit+breaker control (Open_xxx = TRUE -> breaker open) // MUTATED: ARITH_OP_REPLACE
+    // ---------------------------------------------------------------
+
+    // CB2 on the 66 kV side is always kept open (failsafe)
+    #Open_CB2_66KV := TRUE;
+
+    IF #Short_Circuit_TRSF1 THEN
+        // Transformer fault (highest priority): isolate transformer 1
+        // on both sides; supply is transferred to the 22 kV tie (CB2_22KV)
+        #Open_CB1_66KV := TRUE;
+        #Open_CB_TRSF1 := TRUE;
+
+    ELSIF #Short_Circuit_66BUS THEN
+        // 66 kV bus fault: CB1_66KV and CB_TRSF1 closed,
+        // 22 kV tie CB2_22KV open
+        #Open_CB1_66KV := FALSE;
+        #Open_CB_TRSF1 := FALSE;
+
+    ELSIF #Reset_All_CB THEN
+        // Reset after a fault: staged re-closing, one breaker per scan
+        // (prevents simultaneous switching). First the transformer
+        // breaker is closed, then the 66 kV incomer.
+        IF #Open_CB_TRSF1 THEN
+            #Open_CB_TRSF1 := FALSE;
+        ELSE
+            #Open_CB1_66KV := FALSE;
+        END_IF;
+
+    END_IF;
+    // No fault and no reset: breaker states are held (latched after a
+    // trip until Reset_All_CB) -> no rapid switching
+
+    // The 22 kV tie breaker is always the complement of the 66 kV
+    // incomer: the load is fed by exactly one path at any time
+    #Open_CB2_22KV := NOT #Open_CB1_66KV;
+
+    //#ASSERT Short_Circuit_66BUS = (Current_Fault_on_66BUS1 > Threshold500)
+    //#ASSERT Short_Circuit_TRSF1 = (Current_Fault_on_TRSF1 > Threshold500)
+    //#ASSERT Open_CB2_66KV
+    //#ASSERT Open_CB2_22KV <> Open_CB1_66KV
+
+END_FUNCTION_BLOCK

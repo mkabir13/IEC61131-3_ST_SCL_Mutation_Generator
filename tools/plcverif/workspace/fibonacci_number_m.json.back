@@ -1,0 +1,81 @@
+{
+    "id": "v1-M-4",
+    "instruction": "Design a PLC program using structured text (ST code) that implements a function block to Calculate Fibonacci number.\nIf the output could exceed the bound of INT (at max 32767), then return the max value of 32767 based on Saturation Arithmetic ideas.\nThis program should include a main program that initializes an integer input value NN (default is 5)\nand calculates the Fibonacci sequence up to the NN-th term.\nThe final output should be the value of the NN-th Fibonacci number.\nEnsure the program handles edge cases for NN values less than or equal to 2 correctly by returning 1.\n\nFUNCTION_BLOCK FB_Fibonacci_Calculator\nVAR_INPUT\nN : DINT := 5;\nEND_VAR\nVAR_OUTPUT\nO : DINT := 1;\nEND_VAR\nVAR\nF1 : DINT := 1;\nF2 : DINT := 1;\nCNT : DINT := 2;\nEND_VAR\n\n\n\nEND_FUNCTION_BLOCK",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Ensure that the output O is always a non-negative integer.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.O >= 0"
+                },
+                "pattern_description": "{instance.O >= 0} is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that the output O is 1 if N is less than or equal to 2.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.N <= 2",
+                    "2": "instance.O = 1"
+                },
+                "pattern_description": "If {instance.N <= 2} is true at the end of the PLC cycle, then {instance.O = 1} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that the program does not enter an infinite loop.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.CNT <= instance.N"
+                },
+                "pattern_description": "{instance.CNT <= instance.N} is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that the output O is equal to the sum of the previous two Fibonacci numbers if N is greater than 2, unless saturation occurs.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.N > 2 AND instance.O < 32767",
+                    "2": "instance.O = instance.F1 + instance.F2"
+                },
+                "pattern_description": "If {instance.N > 2 AND instance.O < 32767} is true at the end of the PLC cycle, then {instance.O = instance.F1 + instance.F2} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that the output O and intermediate values do not exceed 32767.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.O <= 32767 AND instance.F1 <= 32767 AND instance.F2 <= 32767"
+                },
+                "pattern_description": "{instance.O <= 32767 AND instance.F1 <= 32767 AND instance.F2 <= 32767} is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if overflow occurs, the output O is set to the maximum allowable value of 32767.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.O > 32767 OR instance.O < 0",
+                    "2": "instance.O = 32767"
+                },
+                "pattern_description": "If {instance.O > 32767 OR instance.O < 0} is true at the end of the PLC cycle, then {instance.O = 32767} should always be true at the end of the same cycle."
+            }
+        }
+    ]
+}

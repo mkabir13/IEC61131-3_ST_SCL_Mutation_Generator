@@ -1,0 +1,67 @@
+{
+    "id": "v1-E-2",
+    "instruction": " Use structured text (ST) to design a PLC function block named 'CALCULATE_OUTPUT'.\nThe function block receives an integer input 'i' and produces an output 'o' based on the value of 'i'.\nThe output is determined as follows: when the input 'i' is 0, the output 'o' is 0;\nwhen the input is between 1 and 5, 'o' is the square of 'i';\nwhen 'i' is between 6 and 10, 'o' is equal to 'i' plus two times 'i';\notherwise, 'o' is assigned a value of -1.\nThe program should ensure valid bounds for 'i' and that 'o' never takes undefined or invalid values.\n\nFUNCTION_BLOCK FB_CalculateOutput\nVAR_INPUT\ni: INT;\nEND_VAR\nVAR_OUTPUT\no: INT;\nEND_VAR\n\nEND_FUNCTION_BLOCK ",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Verify that the output 'o' is calculated correctly for 'i' = 0.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.i = 0 --> instance.o = 0"
+                },
+                "pattern_description": "'instance.i = 0 --> instance.o = 0' is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the output 'o' is calculated correctly for 'i' in the range 1 to 5.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.i >= 1 AND instance.i <= 5 --> instance.o = instance.i * instance.i"
+                },
+                "pattern_description": "'instance.i >= 1 AND instance.i <= 5 --> instance.o = instance.i * instance.i' is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the output 'o' is calculated correctly for 'i' in the range 6 to 10.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.i >= 6 AND instance.i <= 10 --> instance.o = instance.i + (instance.i * 2)"
+                },
+                "pattern_description": "'instance.i >= 6 AND instance.i <= 10 --> instance.o = instance.i + (instance.i * 2)' is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the output 'o' is -1 for any other value of 'i'.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.i < 0 OR instance.i > 10 --> instance.o = -1"
+                },
+                "pattern_description": "'instance.i < 0 OR instance.i > 10 --> instance.o = -1' is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the program does not produce invalid outputs.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.o <= 32767 AND instance.o >= -32767"
+                },
+                "pattern_description": "'instance.o <= 32767 AND instance.o >= -32767'  is always true at the end of the PLC cycle."
+            }
+        }
+    ]
+}

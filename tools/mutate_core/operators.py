@@ -1,0 +1,737 @@
+"""
+mutate_core/operators.py — mutation operators for raw ST text.
+
+Regex-based rather than AST-based (no ST grammar/parser dependency) — matches
+the text-manipulation style already used in mergeSTcode.py. Locations are
+found by pattern rather than by a real grammar, so double-check generated
+mutants look sane for unusual formatting; MATIEC's own compile step is the
+authoritative syntax/type validity check regardless of what these operators
+produce.
+
+Each operator has:
+  - operator_id: stable id, e.g. "REL_OP_REPLACE"
+  - family: "conventional" | "plc"   (kept for backward compat with the
+    existing CLI campaign tool / DB column)
+  - category: one of the dashboard's checkbox groups — "relational",
+    "logical", "arithmetic", "boolean", "constant", "variable",
+    "assignment", "conditional", "timer"
+  - generate(text, declarations) -> list[MutantCandidate]
+"""
+
+from __future__ import annotations
+import re
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass
+class MutantCandidate:
+    location_id: str
+    mutated_text: str
+    original_snippet: str
+    mutated_snippet: str
+
+
+def parse_declarations(text: str) -> dict[str, str]:
+    """Scan all VAR...END_VAR blocks for `name : TYPE` declarations.
+    Returns {instance_name: type_name}, e.g. {"T1": "TON"}.
+    """
+    declarations: dict[str, str] = {}
+    for var_block in re.findall(r"VAR(?:_INPUT|_OUTPUT|_IN_OUT)?\b(.*?)END_VAR", text, re.S):
+        for match in re.finditer(r"(\w+)\s*:\s*(\w+)\s*(?::=[^;]+)?;", var_block):
+            declarations[match.group(1)] = match.group(2)
+    return declarations
+
+
+def _body_text(text: str) -> tuple[str, int]:
+    """Returns (body_text, offset) — everything after the last END_VAR,
+    i.e. the executable body, so operators don't corrupt declarations.
+    Falls back to the whole text if there's no VAR block at all.
+    """
+    idx = text.rfind("END_VAR")
+    if idx == -1:
+        return text, 0
+    offset = idx + len("END_VAR")
+    return text[offset:], offset
+
+
+class Operator(ABC):
+    operator_id: str
+    family: str
+    category: str
+    display_name: str
+
+    @abstractmethod
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        ...
+
+
+# --------------------------------------------------------------------
+# Relational / comparison operators
+# --------------------------------------------------------------------
+
+class RelationalOperatorMutation(Operator):
+    """>-><, >=-><=, =-><>, and their inverses. One combined regex,
+    longest-alternative-first, so >= / <= / <> are never mis-split into
+    a lone > / < / =. The `(?<!:)=` guard keeps `:=` assignments untouched.
+    """
+    operator_id = "REL_OP_REPLACE"
+    family = "conventional"
+    category = "relational"
+    display_name = "Relational Operator Mutation"
+
+    _PATTERN = re.compile(r">=|<=|<>|(?<!:)=|>|<")
+    _REPLACEMENTS = {">": "<", "<": ">", ">=": "<=", "<=": ">=", "=": "<>", "<>": "="}
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for m in self._PATTERN.finditer(body):
+            op_token = m.group(0)
+            replacement = self._REPLACEMENTS[op_token]
+            mutated_text = text[:offset + m.start()] + replacement + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{op_token}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=op_token,
+                mutated_snippet=replacement,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Logical operators
+# --------------------------------------------------------------------
+
+class LogicalOperatorMutation(Operator):
+    """AND <-> OR. Word-boundary matched, so AND_THEN / OR_ELSE (IEC
+    short-circuit variants) are correctly left alone -- \\b doesn't break
+    between a letter and an underscore.
+    """
+    operator_id = "LOGICAL_OP_REPLACE"
+    family = "conventional"
+    category = "logical"
+    display_name = "Logical Operator Mutation"
+
+    _PATTERN = re.compile(r"\bAND\b|\bOR\b")
+    _REPLACEMENTS = {"AND": "OR", "OR": "AND"}
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for m in self._PATTERN.finditer(body):
+            token = m.group(0)
+            replacement = self._REPLACEMENTS[token]
+            mutated_text = text[:offset + m.start()] + replacement + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{token}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=token,
+                mutated_snippet=replacement,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Arithmetic operators
+# --------------------------------------------------------------------
+
+class ArithmeticOperatorMutation(Operator):
+    """+ <-> -, * <-> / for binary usage only (best-effort heuristic:
+    requires an operand-like character on both sides, to avoid mutating
+    unary +/- signs). Excludes * adjacent to (* / *) comment delimiters.
+    """
+    operator_id = "ARITH_OP_REPLACE"
+    family = "conventional"
+    category = "arithmetic"
+    display_name = "Arithmetic Operator Mutation"
+
+    _ADD_SUB = re.compile(r"(?<=[\w\)])(\s*)([+\-])(\s*)(?=[\w\(])")
+    _MUL_DIV = re.compile(r"(?<!\()(?<=[\w\)])(\s*)(?<!\()([*/])(?!\))(\s*)(?=[\w\(])")
+    _REPLACEMENTS = {"+": "-", "-": "+", "*": "/", "/": "*"}
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for pattern in (self._ADD_SUB, self._MUL_DIV):
+            for m in pattern.finditer(body):
+                token = m.group(2)
+                replacement = self._REPLACEMENTS[token]
+                start, end = m.start(2), m.end(2)
+                mutated_text = text[:offset + start] + replacement + text[offset + end:]
+                candidates.append(MutantCandidate(
+                    location_id=f"{self.operator_id}::{token}::{start}",
+                    mutated_text=mutated_text,
+                    original_snippet=token,
+                    mutated_snippet=replacement,
+                ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Boolean constant
+# --------------------------------------------------------------------
+
+class BooleanConstantMutation(Operator):
+    """TRUE <-> FALSE, word-boundary matched. Applies anywhere in the
+    file (including VAR initializers), since a wrong default value is a
+    legitimate fault too.
+    """
+    operator_id = "BOOL_CONST_REPLACE"
+    family = "conventional"
+    category = "boolean"
+    display_name = "Boolean Constant Mutation"
+
+    _PATTERN = re.compile(r"\bTRUE\b|\bFALSE\b")
+    _REPLACEMENTS = {"TRUE": "FALSE", "FALSE": "TRUE"}
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for m in self._PATTERN.finditer(text):
+            token = m.group(0)
+            replacement = self._REPLACEMENTS[token]
+            mutated_text = text[:m.start()] + replacement + text[m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{token}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=token,
+                mutated_snippet=replacement,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Numeric constant
+# --------------------------------------------------------------------
+
+class ConstantReplacementMutation(Operator):
+    """Perturbs a bare integer literal by +1. Excludes literals preceded
+    by '#' (base-prefixed, e.g. 16#FF) or immediately followed by a
+    letter (e.g. the "3" in a T#3S time literal, handled separately by
+    the timer operators) to avoid corrupting non-plain-integer tokens.
+    """
+    operator_id = "CONST_VALUE_REPLACE"
+    family = "conventional"
+    category = "constant"
+    display_name = "Constant (Numeric) Mutation"
+
+    _PATTERN = re.compile(r"(?<![#\w])\b(\d+)\b(?!\w)")
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for m in self._PATTERN.finditer(body):
+            original_value = m.group(1)
+            mutated_value = str(int(original_value) + 1)
+            mutated_text = text[:offset + m.start()] + mutated_value + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{original_value}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=original_value,
+                mutated_snippet=mutated_value,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Variable replacement (best-effort -- BOOL variables only)
+# --------------------------------------------------------------------
+
+class VariableReplacementMutation(Operator):
+    """Swaps one usage of a BOOL variable for another BOOL variable
+    (cyclic: each variable is swapped with the next one in declaration
+    order). Restricted to BOOL to keep replacements type-safe without a
+    real type checker. Needs at least 2 BOOL variables declared.
+    """
+    operator_id = "VAR_REPLACE"
+    family = "conventional"
+    category = "variable"
+    display_name = "Variable Replacement Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        bool_vars = [name for name, t in declarations.items() if t == "BOOL"]
+        if len(bool_vars) < 2:
+            return []
+
+        body, offset = _body_text(text)
+        candidates = []
+        for i, name in enumerate(bool_vars):
+            replacement = bool_vars[(i + 1) % len(bool_vars)]
+            m = re.search(rf"\b{re.escape(name)}\b", body)
+            if not m:
+                continue
+            mutated_text = text[:offset + m.start()] + replacement + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}->{replacement}",
+                mutated_text=mutated_text,
+                original_snippet=name,
+                mutated_snippet=replacement,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Assignment mutation
+# --------------------------------------------------------------------
+
+class AssignmentNegationMutation(Operator):
+    """`X := <expr>;` -> `X := NOT (<expr>);` for each assignment whose
+    target is a declared BOOL variable. Skips assignments already
+    wrapped in NOT(...) to avoid a no-op double negation.
+    """
+    operator_id = "ASSIGN_NEGATE"
+    family = "conventional"
+    category = "assignment"
+    display_name = "Assignment Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for m in re.finditer(r"(\w+)\s*:=\s*([^;]+);", body):
+            target, expr = m.group(1), m.group(2)
+            if declarations.get(target) != "BOOL":
+                continue
+            if re.match(r"\s*NOT\s*\(", expr):
+                continue
+            mutated_snippet = f"{target} := NOT ({expr.strip()});"
+            mutated_text = text[:offset + m.start()] + mutated_snippet + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{target}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=m.group(0),
+                mutated_snippet=mutated_snippet,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Conditional expression mutation
+# --------------------------------------------------------------------
+
+class ConditionalNegationMutation(Operator):
+    """`IF <cond> THEN` / `ELSIF <cond> THEN` -> negated condition."""
+    operator_id = "COND_NEGATE"
+    family = "conventional"
+    category = "conditional"
+    display_name = "Conditional Expression Mutation"
+
+    _PATTERN = re.compile(r"\b(IF|ELSIF)\s+(.+?)\s+THEN\b")
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        body, offset = _body_text(text)
+        candidates = []
+        for m in self._PATTERN.finditer(body):
+            keyword, cond = m.group(1), m.group(2)
+            if re.match(r"\s*NOT\s*\(", cond):
+                continue
+            mutated_snippet = f"{keyword} NOT ({cond}) THEN"
+            mutated_text = text[:offset + m.start()] + mutated_snippet + text[offset + m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{keyword}::{m.start()}",
+                mutated_text=mutated_text,
+                original_snippet=m.group(0),
+                mutated_snippet=mutated_snippet,
+            ))
+        return candidates
+
+
+# --------------------------------------------------------------------
+# Timer / edge-detector operators (PLC-specific)
+# --------------------------------------------------------------------
+
+class TimerBypassMutation(Operator):
+    """`Y := X.Q` -> `Y := <X's IN argument>` for a TON/TOF/TP instance X."""
+    operator_id = "TIMER_BYPASS"
+    family = "plc"
+    category = "timer"
+    display_name = "Timer Bypass Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("TON", "TOF", "TP"):
+                continue
+            call_match = re.search(rf"{name}\s*\(([^)]*)\)", text)
+            if not call_match:
+                continue
+            in_match = re.search(r"IN\s*:=\s*([^,)\s]+)", call_match.group(1))
+            if not in_match:
+                continue
+            in_expr = in_match.group(1)
+
+            assign_pattern = re.compile(rf"(\w+)\s*:=\s*{name}\.Q\s*;")
+            m = assign_pattern.search(text)
+            if not m:
+                continue
+            lhs = m.group(1)
+            original_snippet = m.group(0)
+            mutated_snippet = f"{lhs} := {in_expr}; (* MUTATION: TIMER_BYPASS on {name} *)"
+            mutated_text = text[:m.start()] + mutated_snippet + text[m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=original_snippet,
+                mutated_snippet=mutated_snippet,
+            ))
+        return candidates
+
+
+class TimerPresetMutation(Operator):
+    """Halves a timer's PT preset given in whole seconds: T#3S -> T#1S."""
+    operator_id = "TIMER_PRESET_CHANGE"
+    family = "plc"
+    category = "timer"
+    display_name = "Timer Preset Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("TON", "TOF", "TP"):
+                continue
+            m = re.search(rf"{name}\s*\([^)]*PT\s*:=\s*T#(\d+)S", text)
+            if not m:
+                continue
+            original_seconds = int(m.group(1))
+            new_seconds = max(1, original_seconds // 2)
+            if new_seconds == original_seconds:
+                continue
+            original_snippet = f"T#{original_seconds}S"
+            mutated_snippet = f"T#{new_seconds}S"
+            start = m.start(1) - 2  # back up to include "T#"
+            end = m.end(1) + 1      # include trailing "S"
+            mutated_text = text[:start] + mutated_snippet + text[end:]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=original_snippet,
+                mutated_snippet=mutated_snippet,
+            ))
+        return candidates
+
+
+class EdgePolarityMutation(Operator):
+    """Flips an R_TRIG instance's declared type to F_TRIG, or vice versa."""
+    operator_id = "EDGE_POLARITY_FLIP"
+    family = "plc"
+    category = "timer"
+    display_name = "Edge Detector Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("R_TRIG", "F_TRIG"):
+                continue
+            flipped = "F_TRIG" if type_name == "R_TRIG" else "R_TRIG"
+            pattern = re.compile(rf"({name}\s*:\s*){type_name}(\s*;)")
+            m = pattern.search(text)
+            if not m:
+                continue
+            mutated_text = text[:m.start()] + m.group(1) + flipped + m.group(2) + text[m.end():]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=type_name,
+                mutated_snippet=flipped,
+            ))
+        return candidates
+
+
+class CounterThresholdMutation(Operator):
+    """Perturbs a CTU/CTD instance's PV (preset value) by +/-1 -- a
+    threshold fault, matching the paper's O_PLC counter-fault family
+    (previously missing from this taxonomy; timer and edge-detector
+    faults were covered, counter and latch faults were not).
+    """
+    operator_id = "COUNTER_THRESHOLD_CHANGE"
+    family = "plc"
+    category = "counter_latch"
+    display_name = "Counter Threshold Mutation"
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("CTU", "CTD", "CTUD"):
+                continue
+            m = re.search(rf"{name}\s*\([^)]*PV\s*:=\s*(\d+)", text)
+            if not m:
+                continue
+            original_value = int(m.group(1))
+            new_value = original_value + 1 if original_value > 0 else 1
+            original_snippet = str(original_value)
+            mutated_snippet = str(new_value)
+            mutated_text = text[:m.start(1)] + mutated_snippet + text[m.end(1):]
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=original_snippet,
+                mutated_snippet=mutated_snippet,
+            ))
+        return candidates
+
+
+class CounterDirectionMutation(Operator):
+    """Swaps a CTU instance's declared type to CTD, or vice versa -- a
+    direction fault (counts down instead of up, or vice versa). Skips
+    CTUD (already bidirectional; direction isn't a meaningful mutation
+    for it the same way).
+
+    CTU and CTD have DIFFERENT parameter names, not just different
+    counting direction (CTU: CU, R -> Q, CV; CTD: CD, LD -> Q, CV) --
+    confirmed by testing a naive type-only flip against real MATIEC,
+    which fails with "Invalid parameter 'CU'/'R'". Renames the call-site
+    arguments to match, same fix applied to LatchPriorityMutation above.
+    """
+    operator_id = "COUNTER_DIRECTION_FLIP"
+    family = "plc"
+    category = "counter_latch"
+    display_name = "Counter Direction Mutation"
+
+    _PARAM_RENAME = {
+        "CTU": {"CU": "CD", "R": "LD"},   # CTU -> CTD
+        "CTD": {"CD": "CU", "LD": "R"},   # CTD -> CTU
+    }
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("CTU", "CTD"):
+                continue
+            flipped = "CTD" if type_name == "CTU" else "CTU"
+
+            decl_pattern = re.compile(rf"({name}\s*:\s*){type_name}(\s*;)")
+            decl_match = decl_pattern.search(text)
+            if not decl_match:
+                continue
+
+            call_pattern = re.compile(rf"{name}\s*\(([^)]*)\)")
+            call_match = call_pattern.search(text)
+            if not call_match:
+                continue
+
+            renames = self._PARAM_RENAME[type_name]
+            new_call_args = call_match.group(1)
+            for old_param, new_param in renames.items():
+                new_call_args = re.sub(rf"\b{old_param}\s*:=", f"{new_param} :=", new_call_args)
+
+            if call_match.start() > decl_match.start():
+                mutated_text = (
+                    text[:call_match.start(1)] + new_call_args + text[call_match.end(1):]
+                )
+                mutated_text = (
+                    mutated_text[:decl_match.start()] + decl_match.group(1) + flipped
+                    + decl_match.group(2) + mutated_text[decl_match.end():]
+                )
+            else:
+                mutated_text = (
+                    text[:decl_match.start()] + decl_match.group(1) + flipped
+                    + decl_match.group(2) + text[decl_match.end():]
+                )
+                offset = len(flipped) - len(type_name)
+                mutated_text = (
+                    mutated_text[:call_match.start(1) + offset] + new_call_args
+                    + mutated_text[call_match.end(1) + offset:]
+                )
+
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=f"{type_name} ({', '.join(renames.keys())})",
+                mutated_snippet=f"{flipped} ({', '.join(renames.values())})",
+            ))
+        return candidates
+
+
+class LatchPriorityMutation(Operator):
+    """Flips an SR (set-dominant) latch instance's declared type to RS
+    (reset-dominant), or vice versa -- a priority fault, matching the
+    paper's O_PLC latch-fault family.
+
+    SR and RS have DIFFERENT parameter names, not just different
+    priority (SR: S1, R -> Q1; RS: S, R1 -> Q1) -- confirmed by testing
+    a naive type-only flip against real MATIEC, which fails with
+    "Invalid parameter 'S1'/'R' when invoking FB". This operator renames
+    the call-site arguments to match the new type, so the mutant is
+    syntactically valid ST, not just a type-declaration edit.
+    """
+    operator_id = "LATCH_PRIORITY_FLIP"
+    family = "plc"
+    category = "counter_latch"
+    display_name = "Latch Priority Mutation"
+
+    _PARAM_RENAME = {
+        "SR": {"S1": "S", "R": "R1"},   # SR -> RS
+        "RS": {"S": "S1", "R1": "R"},   # RS -> SR
+    }
+
+    def generate(self, text: str, declarations: dict[str, str]) -> list[MutantCandidate]:
+        candidates = []
+        for name, type_name in declarations.items():
+            if type_name not in ("SR", "RS"):
+                continue
+            flipped = "RS" if type_name == "SR" else "SR"
+
+            decl_pattern = re.compile(rf"({name}\s*:\s*){type_name}(\s*;)")
+            decl_match = decl_pattern.search(text)
+            if not decl_match:
+                continue
+
+            call_pattern = re.compile(rf"{name}\s*\(([^)]*)\)")
+            call_match = call_pattern.search(text)
+            if not call_match:
+                continue
+
+            renames = self._PARAM_RENAME[type_name]
+            new_call_args = call_match.group(1)
+            for old_param, new_param in renames.items():
+                new_call_args = re.sub(rf"\b{old_param}\s*:=", f"{new_param} :=", new_call_args)
+
+            # Apply both edits from the end of the string backward, so
+            # earlier offsets stay valid after the later (rightward) edit.
+            if call_match.start() > decl_match.start():
+                mutated_text = (
+                    text[:call_match.start(1)] + new_call_args + text[call_match.end(1):]
+                )
+                mutated_text = (
+                    mutated_text[:decl_match.start()] + decl_match.group(1) + flipped
+                    + decl_match.group(2) + mutated_text[decl_match.end():]
+                )
+            else:
+                mutated_text = (
+                    text[:decl_match.start()] + decl_match.group(1) + flipped
+                    + decl_match.group(2) + text[decl_match.end():]
+                )
+                offset = len(flipped) - len(type_name)
+                mutated_text = (
+                    mutated_text[:call_match.start(1) + offset] + new_call_args
+                    + mutated_text[call_match.end(1) + offset:]
+                )
+
+            candidates.append(MutantCandidate(
+                location_id=f"{self.operator_id}::{name}",
+                mutated_text=mutated_text,
+                original_snippet=f"{type_name} ({', '.join(renames.keys())})",
+                mutated_snippet=f"{flipped} ({', '.join(renames.values())})",
+            ))
+        return candidates
+
+
+def mask_comments_and_strings(text: str) -> str:
+    """Return a same-length copy of `text` in which every character inside
+    a comment (`// ...` to end of line, `(* ... *)`) or a string literal
+    ('...' / "...") is replaced by a space (newlines kept). Operators match
+    against this masked copy, so tokens such as `+`, `->`, `=`, `TRUE`,
+    `AND` that merely appear in comment prose are never mutated.
+    """
+    out = list(text)
+    i, n = 0, len(text)
+
+    def blank(a, b):
+        for k in range(a, min(b, n)):
+            if out[k] != "\n":
+                out[k] = " "
+
+    while i < n:
+        two = text[i:i + 2]
+        c = text[i]
+        if two == "//":
+            j = text.find("\n", i)
+            j = n if j == -1 else j
+            blank(i, j)
+            i = j
+        elif two == "(*":
+            j = text.find("*)", i + 2)
+            j = n if j == -1 else j + 2
+            blank(i, j)
+            i = j
+        elif c in ("'", '"'):
+            j = i + 1
+            while j < n and text[j] != c and text[j] != "\n":
+                if text[j] == "$":
+                    j += 1
+                j += 1
+            blank(i, j + 1)
+            i = j + 1
+        else:
+            i += 1
+    return "".join(out)
+
+
+def _restore_from_mask(original: str, masked: str, mutated_masked: str) -> str:
+    """Re-apply the edit(s) that turned `masked` into `mutated_masked` onto
+    `original`, so comment/string text is preserved verbatim."""
+    if masked == original:
+        return mutated_masked
+    import difflib
+    p = 0
+    lim = min(len(masked), len(mutated_masked))
+    while p < lim and masked[p] == mutated_masked[p]:
+        p += 1
+    s = 0
+    while s < lim - p and masked[len(masked) - 1 - s] == mutated_masked[len(mutated_masked) - 1 - s]:
+        s += 1
+    a = masked[p:len(masked) - s]
+    b = mutated_masked[p:len(mutated_masked) - s]
+    mid = []
+    ops = difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes()
+    for tag, i1, i2, j1, j2 in ops:
+        if tag == "equal":
+            mid.append(original[p + i1:p + i2])
+        else:
+            mid.append(b[j1:j2])
+    return original[:p] + "".join(mid) + original[len(original) - s:]
+
+
+DEFAULT_OPERATORS: list[Operator] = [
+    RelationalOperatorMutation(),
+    LogicalOperatorMutation(),
+    ArithmeticOperatorMutation(),
+    BooleanConstantMutation(),
+    ConstantReplacementMutation(),
+    VariableReplacementMutation(),
+    AssignmentNegationMutation(),
+    ConditionalNegationMutation(),
+    TimerBypassMutation(),
+    TimerPresetMutation(),
+    EdgePolarityMutation(),
+    CounterThresholdMutation(),
+    CounterDirectionMutation(),
+    LatchPriorityMutation(),
+]
+
+# Category metadata for building the dashboard's checkbox UI.
+CATEGORIES: list[tuple[str, str]] = [
+    ("relational", "Relational Operator Mutation"),
+    ("logical", "Logical Operator Mutation"),
+    ("arithmetic", "Arithmetic Operator Mutation"),
+    ("boolean", "Boolean Constant Mutation"),
+    ("constant", "Constant (Numeric) Mutation"),
+    ("variable", "Variable Replacement Mutation"),
+    ("assignment", "Assignment Mutation"),
+    ("conditional", "Conditional Expression Mutation"),
+    ("timer", "Timer / Edge Detector Mutation"),
+    ("counter_latch", "Counter / Latch Mutation"),
+]
+
+
+def generate_all_candidates(
+    text: str,
+    operators: list[Operator] | None = None,
+    categories: list[str] | None = None,
+) -> list[tuple[Operator, MutantCandidate]]:
+    """categories=None means "all categories" (backward compatible with
+    the existing CLI campaign tool, which doesn't pass this argument).
+    """
+    operators = operators or DEFAULT_OPERATORS
+    if categories is not None:
+        operators = [op for op in operators if op.category in categories]
+
+    # Operators see a comment/string-masked copy (same length, same
+    # offsets); edits are then re-applied to the untouched original.
+    masked = mask_comments_and_strings(text)
+    declarations = parse_declarations(masked)
+    out = []
+    for op in operators:
+        for candidate in op.generate(masked, declarations):
+            candidate.mutated_text = _restore_from_mask(text, masked, candidate.mutated_text)
+            out.append((op, candidate))
+    return out

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('dashboard.view_submission', submission_id=submission.id) }}">&larr; back to {{ submission.name }}</a></p>
+<h1>{{ mutant.display_id }} -- {{ mutant.operator_id }}</h1>
+<p class="muted">Category: {{ mutant.category }} &middot; Location: <code>{{ mutant.location_id }}</code></p>
+<p><code>{{ mutant.original_snippet }}</code> &rarr; <code>{{ mutant.mutated_snippet }}</code></p>
+
+{% if mutant.compile_ok %}
+  <p class="ok">Compiled successfully.</p>
+{% else %}
+  <p class="fail">Compilation failed.</p>
+  <pre class="error-block">{{ mutant.compile_stderr }}</pre>
+{% endif %}
+
+<h2>Original vs. mutated code</h2>
+<p class="muted"><mark class="hl-removed">red</mark> = removed from original &middot; <mark class="hl-added">yellow</mark> = changed/added in mutant
+&middot; <button type="button" class="link-btn" onclick="toggleSclView()" id="scl-toggle-btn">SCL</button>
+<span id="scl-note" style="display:none;">SCL-style comment formatting shown (cosmetic only -- not verified against a Siemens compiler). <button type="button" class="link-btn" onclick="toggleSclView()">Back to ST</button></span>
+</p>
+<div class="side-by-side st-view">
+  <div class="code-panel">
+    <div class="code-panel-title">Original</div>
+    <pre class="code-block highlighted-code">{{ original_html|safe }}</pre>
+  </div>
+  <div class="code-panel">
+    <div class="code-panel-title">Mutated ({{ mutant.display_id }})</div>
+    <pre class="code-block highlighted-code">{{ mutated_html|safe }}</pre>
+  </div>
+</div>
+<div class="side-by-side scl-view" style="display:none;">
+  <div class="code-panel">
+    <div class="code-panel-title">Original (SCL-style)</div>
+    <pre class="code-block highlighted-code">{{ original_scl_html|safe }}</pre>
+  </div>
+  <div class="code-panel">
+    <div class="code-panel-title">Mutated ({{ mutant.display_id }}, SCL-style)</div>
+    <pre class="code-block highlighted-code">{{ mutated_scl_html|safe }}</pre>
+  </div>
+</div>
+<script>
+function toggleSclView() {
+  const showingScl = document.getElementById('scl-note').style.display !== 'none';
+  document.querySelectorAll('.st-view').forEach(el => el.style.display = showingScl ? '' : 'none');
+  document.querySelectorAll('.scl-view').forEach(el => el.style.display = showingScl ? 'none' : '');
+  document.getElementById('scl-note').style.display = showingScl ? 'none' : '';
+  document.getElementById('scl-toggle-btn').style.display = showingScl ? '' : 'none';
+}
+</script>
+
+<details>
+  <summary>Line-level unified diff (alternate view)</summary>
+  <div class="diff-block">{{ diff_html|safe }}</div>
+</details>
+
+<h2>DistinguishSearch + C-DET Diagnosis-Guided Refinement</h2>
+<p class="muted">Searches boolean-input scan sequences for a divergence (Task 1.3). If none is found, a deterministic diagnostician (Task 2.2's own C-DET baseline -- no LLM) checks whether the trace was simply too short for a TIMER construct to fire, and retries with a computed sufficient depth if so. Independent of Compile and Run; doesn't touch Tests/ at all. Can take 10-60+ seconds.</p>
+<form method="post" action="{{ url_for('dashboard.distinguish_mutant', submission_id=submission.id, mutant_id=mutant.id) }}">
+  <button type="submit" class="primary-btn">Run DistinguishSearch</button>
+</form>
+
+{% if mutant.distinguish_status %}
+<div class="monitor" style="margin-top: 12px;">
+  <div class="monitor-step">
+    <div class="monitor-step-title">
+      Result:
+      {% if mutant.distinguish_status == "killed" %}
+        <span class="ok">KILLED</span> -- diverged at scan {{ mutant.distinguish_depth }} (strategy: {{ mutant.distinguish_strategy }})
+        {% if mutant.distinguish_recovered_by_refinement %}
+          <span class="ok">&mdash; recovered by C-DET refinement</span>
+        {% endif %}
+      {% elif mutant.distinguish_status == "undetermined" %}
+        <span class="fail">UNDETERMINED</span> -- no divergence found, even after diagnosis-guided refinement
+      {% else %}
+        <span class="fail">ERROR</span>
+      {% endif %}
+      {% if mutant.distinguish_refinement_iterations %}
+        <br><span class="muted">{{ mutant.distinguish_refinement_iterations }} refinement iteration(s) attempted</span>
+      {% endif %}
+    </div>
+    <pre class="monitor-log">{{ mutant.distinguish_log }}</pre>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

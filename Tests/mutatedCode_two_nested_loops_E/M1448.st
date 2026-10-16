@@ -1,0 +1,71 @@
+FUNCTION_BLOCK "FB_NestedLoopControl"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+
+VAR
+    i : Int;
+    j : Int;
+    flag : Bool;
+    count : Int := 0;
+    some_var : Int;
+END_VAR
+
+BEGIN
+
+    // Re-initialise the per-scan working variables
+    #count := 0;
+    #flag := FALSE;
+    #some_var := 0;
+
+    // Outer loop: i = 0 .. 10
+    FOR #i := 0 TO 10 DO
+
+        // Inner loop: j = 10 .. 100, step 2  (46 iterations per pass)
+        FOR #j := 10 TO 100 BY 2 DO
+
+            // Count this execution of the inner loop body
+            #count := #count + 1;
+            #some_var := #j;
+
+            // Raise the flag once the expected maximum (46) is reached
+            IF #count >= 46 THEN
+                #flag := TRUE;
+            END_IF;
+
+            // Flag set -> leave the inner loop (before j is incremented)
+            IF #flag THEN
+                EXIT;
+            END_IF;
+
+        END_FOR;
+
+        // Flag set -> leave the outer loop (before i is incremented)
+        IF #flag THEN
+            EXIT;
+        END_IF;
+
+    END_FOR;
+
+    // Safety clamps (never active in normal execution; keep the
+    // loop variables inside their declared bounds in every case)
+    IF #i < 0 THEN
+        #i := 0;
+    ELSIF #i > 10 THEN
+        #i := 10;
+    END_IF;
+
+    IF #j < 10 THEN
+        #j := 10;
+    ELSIF #j > 100 THEN
+        #j := 101; (* MUTATED: CONST_VALUE_REPLACE *)
+    END_IF;
+
+    IF #count > 46 THEN
+        #count := 46;
+    END_IF;
+
+    //#ASSERT count >= 0 AND count <= 46
+    //#ASSERT i >= 0 AND i <= 10
+    //#ASSERT j >= 10 AND j <= 100
+
+END_FUNCTION_BLOCK

@@ -1,0 +1,71 @@
+unnamed
+=======
+
+** THE VERIFICATION PROBLEM IS NOT AVAILABLE. **
+
+**Result: the requirement is ERROR**
+
+Backend: unknown
+Parameters: 
+Input bindings: 
+
+
+
+Stages
+------
+* Parsing source code (1 ms): Successful
+* Control-flow declaration generation (636 ms): Successful
+    - [Error] The file 'M096.st' contains the following errors: 
+- no viable alternative at input 'DIV' (34:21)
+- missing ';' at 'DecimalValue' (34:25)
+- no viable alternative at input ')' (34:39)
+- no viable alternative at input ',' (39:31)
+- missing ';' at 'hexDigit' (39:42).
+    - [Error] Unable to generate the CFA due to errors in parsing the source file.
+* Reporting (0 ms): Unknown
+
+Settings
+--------
+  -description = ""
+  -id = verify_m096
+  -job = verif
+  -job.backend = theta
+  -job.backend.array-representation = ENUMERATED
+  -job.backend.binary_path = ./tools/theta/theta-cfa-cli.jar
+  -job.backend.domain = PRED_CART
+  -job.backend.encoding = LBE
+  -job.backend.initprec = EMPTY
+  -job.backend.integer-representation = UNBOUNDED
+  -job.backend.java_home_path = /home/mkabir/Desktop/mutate/tools/plcverif/jdk-25.0.4.1+1
+  -job.backend.lib_path = ./tools/theta
+  -job.backend.maxenum = ""
+  -job.backend.precgranularity = LOCAL
+  -job.backend.predsplit = WHOLE
+  -job.backend.refinement = BW_BIN_ITP
+  -job.backend.search = ERR
+  -job.backend.timeout = 5
+  -job.reporters.0 = plaintext
+  -job.reporters.0.include_settings = true
+  -job.reporters.0.max_output_length = 5000
+  -job.reporters.0.min_log_level = Warning
+  -job.reporters.0.show_logitem_timestapms = false
+  -job.reporters.0.write_to_console = true
+  -job.reporters.0.write_to_file = true
+  -job.req = assertion
+  -job.req.assert_representation_strategy = INTEGER
+  -job.req.assertion_to_check.0 = *
+  -job.req.max_expr_size_for_detailed_diagnosis = 250
+  -lf = step7
+  -lf.compiler = Step7v55
+  -name = unnamed
+  -output = /home/mkabir/Desktop/mutate/tools/plcverif/output/2026-09-24_22-52-57
+  -reductions.0 = basic_reductions
+  -reductions.0.ExpressionPropagation_maxage = 50
+  -reductions.0.ExpressionPropagation_maxexprsize = 100
+  -reductions.0.ExpressionPropagation_maxlocations = 50000
+  -reductions.0.fine_logging = false
+  -reductions.0.print_vardep_graph = false
+  -reductions.0.show_progress = false
+  -sourcefiles.0 = M096.st
+
+

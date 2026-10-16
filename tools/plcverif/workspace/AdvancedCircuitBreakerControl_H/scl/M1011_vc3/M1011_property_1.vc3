@@ -1,0 +1,16 @@
+-description = "Ensure that if either PP0 or PP1 is true at the end of the cycle, and neither PP2, PP3, nor PPL3 is true, the output E_AL1_B1 should be set to 1."
+-id = verify_v2_H_3_property_1
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "(instance.PP0 OR instance.PP1) AND NOT (instance.PP2 OR instance.PP3 OR instance.PPL3)"
+-job.req.pattern_params.2 = "instance.E_AL1_B1 = TRUE"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_AdvancedCircuitBreakerControl
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M1011.scl"

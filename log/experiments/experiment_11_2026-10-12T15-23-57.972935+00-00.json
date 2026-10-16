@@ -1,0 +1,19 @@
+{
+  "experiment_id": 11,
+  "timestamp": "2026-10-12T15:23:57.972935+00:00",
+  "name": "Untitled",
+  "mutation_categories_used": [
+    "relational",
+    "logical",
+    "arithmetic",
+    "boolean",
+    "constant",
+    "variable",
+    "assignment",
+    "conditional",
+    "timer",
+    "counter_latch"
+  ],
+  "num_mutations_generated": 102,
+  "mutations_dir": "/home/mkabir/Desktop/mutate/log/mutations/submission_11_20261012T152357Z"
+}

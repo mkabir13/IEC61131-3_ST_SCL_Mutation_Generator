@@ -1,0 +1,16 @@
+-description = "Ensure that Breaker B56 correctly transitions to opened when it receives the trip signal."
+-id = verify_v2_H_1_property_12
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "instance.B56_Close = FALSE and instance.B56_Trip = TRUE"
+-job.req.pattern_params.2 = "instance.B56_Opened = TRUE AND instance.B56_Closed = FALSE"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_BreakerControlSystem
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1471.scl"

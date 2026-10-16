@@ -1,0 +1,16 @@
+-description = "Ensure that Point_2a is correctly calculated based on the state of Breakers B55, B10_12, B10_1, and B10_2."
+-id = verify_v2_H_1_property_17
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "(instance.B55_Closed AND (instance.B10_12_Closed AND instance.B10_1_Closed OR instance.B10_2_Closed))"
+-job.req.pattern_params.2 = "instance.Point_2a = 0"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_BreakerControlSystem
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1473.scl"

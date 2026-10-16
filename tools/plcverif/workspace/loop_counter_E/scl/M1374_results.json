@@ -1,0 +1,84 @@
+{
+  "dataset_id": "v1-E-4",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374.scl",
+  "source_preparation": [],
+  "source_warnings": [],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "SATISFIED",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "assertion",
+      "description": "Verify that all assertions are satisfied in the program.",
+      "entry": "FB_LoopCounter",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374_vc3/M1374_property_1.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Verify that micro does not become negative.",
+      "entry": "FB_LoopCounter",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374_vc3/M1374_property_2.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Verify that macro does not become negative.",
+      "entry": "FB_LoopCounter",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374_vc3/M1374_property_3.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Verify that the output o is always a positive integer.",
+      "entry": "FB_LoopCounter",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/loop_counter_E/scl/M1374_vc3/M1374_property_4.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

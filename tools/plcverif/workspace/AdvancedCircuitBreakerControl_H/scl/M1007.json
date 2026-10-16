@@ -1,0 +1,97 @@
+{
+    "instruction": "The AdvancedCircuitBreakerControlFB function block manages the operational logic for a circuit breaker control system, transitioning through various states based on the input signals from buttons and the status of circuit breakers.\nLogic Overview\n\nInitialization:\nThe STABLE variable is initialized to 0. The system will loop until it reaches a stable state.\n\nState Transitions:\n\nThere is a while loop with condition (STABLE = 0), and inside the while there is state machine operations\n\n1. set stable to 1.\n\n2. The state machine progresses through a series of states (PP0, PP1, ..., PP7 and PPL3, PPL4, PPL5, PPL7)\nbased on specific conditions(a series of if conditions):\n\nPP0 to PP1:\nIf PP0 is active, and both NOT MCB_CONTROL and NOT PP1 are true, transition from PP0 to PP1, setting PP0 to 0, PP1 to 1, and STABLE to 0.\nThis indicates the first activation of the control system.\n\nPP1 to PP2:\nIf PP1 is active and S_AL1_P_B1 is true, and NOT PP2 is true, transition from PP1 to PP2, setting PP1 to 0, PP2 to 1, and STABLE to 0.\nThis indicates that the first button has been pressed.\n\nPP2 to PP3:\nIf PP2 is active, S_AL1_P_B2 is true, NOT MCB_CONTROL is true, and NOT PP3 is true, transition from PP2 to PP3, setting PP2 to 0, PP3 to 1, and STABLE to 0.\nThis indicates that the second button has been pressed without the circuit breaker being busy.\n\nPP3 to PP4:\nIf PP3 is active, S_AL1_MCB is true, and both NOT PP4 and NOT PP1 are true, transition from PP3 to PP4, setting PP3 to 0, PP4 to 1, PP1 to 1, and STABLE to 0.\nThis indicates that the main circuit breaker is closed and transitions to the next state.\n\nPP4 to PP5:\nIf PP4 and MCB are true, and MCB_BUSY is true, and NOT PP5 is true, transition from PP4 to PP5, setting PP4 to 0, MCB to 0, PP5 to 1, and STABLE to 0.\nThis indicates that the circuit breaker is busy, moving towards a stable state.\n\nPP5 to PP7:\nIf PP5 is active, S_AL1_MCB2 is true, NOT PP7 is true, and NOT MCB is true, transition from PP5 to PP7, setting PP5 to 0, PP7 to 1, MCB to 1, and STABLE to 0.\nThis indicates the control system transitions to the second circuit breaker.\n\nPP7 to End:\nIf PP7 is active and S_AL1_P_B3 is true, transition from PP7 to the end state, setting PP7 to 0 and STABLE to 0.\nThis indicates that the operation of the circuit breaker is complete.\n\nPP2 to PPL3:\nIf PP2 is active, S_AL1_P_B2 is true, MCB_CONTROL is true, NOT PPL3 is true, and NOT PP1 is true, transition from PP2 to PPL3, setting PP2 to 0, PPL3 to 1, PP1 to 1, and STABLE to 0.\nThis indicates that the second button is pressed with the main breaker being controlled, moving to an alternative state.\n\nPPL3 to PPL4:\nIf PPL3 is active, and S_AL1_MCBR is true, and NOT PPL4 is true, transition from PPL3 to PPL4, setting PPL3 to 0, PPL4 to 1, and STABLE to 0.\nThis indicates that the reverse circuit breaker (MCBR) is being activated.\n\nPPL4 to PPL5:\nIf PPL4 and MCBR are true, and MCBR_BUSY is true, and NOT PPL5 is true, transition from PPL4 to PPL5, setting PPL4 to 0, MCBR to 0, PPL5 to 1, and STABLE to 0.\nThis indicates that the reverse circuit breaker is busy and transitioning to a new state.\n\nPPL5 to PPL7:\nIf PPL5 is active, S_AL1_MCBR2 is true, NOT PPL7 is true, and NOT MCBR is true, transition from PPL5 to PPL7, setting PPL5 to 0, PPL7 to 1, MCBR to 1, and STABLE to 0.\nThis indicates that the system transitions to a second reverse circuit breaker state.\n\nPPL7 to End:\nIf PPL7 is active, and S_AL1_P_B3 is true, transition from PPL7 to the end state, setting PPL7 to 0 and STABLE to 0.\nThis indicates that the reverse circuit breaker operation is complete.\n\nOutput Control:\nAfter completing the state transitions, the outputs are set based on the active states:\nIf PP0 or PP1 is true, E_AL1_B1 is set to 1 (indicating the first circuit is active).\nIf PP3 is true, set MCB_CONTROL to 1, indicating control over the main circuit breaker.\nIf either PPL3 or PPL4 is active, set PAS_AL1_PLUS and PAS_AL1_TURN to 1, indicating operational status for these processes.\nIf either PPAL1 or PP2 is true, set PUWS_AL1_B1_PLUS to 1.\nIf PP2, PP3, or PPL3 is true, set E_AL1_B1 to 0 (indicating the circuit is not active).\nIf PP0 or PP3 is true, reset MCB_CONTROL to 0, stopping control of the main circuit breaker.\nIf PP0, PP3, or PP4 is true, reset PAS_AL1_PLUS and PAS_AL1_TURN to 0.\nIf PPAL1 or PP2 is true, reset PUWS_AL1_B1_RIGHT to 0\n\n\"output\": \"FUNCTION_BLOCK FB_AdvancedCircuitBreakerControl\\nS_AL1_P_B1 : BOOL;\\nS_AL1_P_B2 : BOOL;\\nS_AL1_MCB : BOOL;\\nMCB_BUSY : BOOL;\\nMCB_ERROR : BOOL;\\nS_AL1_MCBR : BOOL;\\nMCBR_BUSY : BOOL;\\nMCBR_ERROR : BOOL;\\nS_AL1_P_B3 : BOOL;\\nS_AL1_MCB2 : BOOL;\\nS_AL1_MCBR2 : BOOL;\\nE_AL1_B1 : BOOL;\\nPUWS_AL1_B1_PLUS : BOOL;\\nPUWS_AL1_B1_RIGHT : BOOL;\\nPAS_AL1_PLUS : BOOL;\\nPAS_AL1_TURN : BOOL;\\nEND_VAR\\n\\nVAR\\nPPAL1 : BOOL := 1;\\nPP0 : BOOL := 1;\\nPP1 : BOOL := 0;\\nPP2 : BOOL := 0;\\nPP3 : BOOL := 0;\\nPP4 : BOOL := 0;\\nMCB : BOOL := 1;\\nPP5 : BOOL := 0;\\nPP7 : BOOL := 0;\\nPPL3 : BOOL := 0;\\nPPL4 : BOOL := 0;\\nMCBR : BOOL := 1;\\nPPL5 : BOOL := 0;\\nPPL7 : BOOL := 0;\\nSTABLE : BOOL := 0;\\nEND_VAR\\n\\nVAR\\nMCB_CONTROL : BOOL;\\nEND_VAR\nEND_FUNCTION_BLOCK\"",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Ensure that if either PP0 or PP1 is true at the end of the cycle, and neither PP2, PP3, nor PPL3 is true, the output E_AL1_B1 should be set to 1.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "(instance.PP0 OR instance.PP1) AND NOT (instance.PP2 OR instance.PP3 OR instance.PPL3)",
+                    "2": "instance.E_AL1_B1 = 1"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PP0 OR instance.PP1 AND NOT (instance.PP2 OR instance.PP3 OR instance.PPL3)} is true at the end of the PLC cycle, then {instance.E_AL1_B1 = 1} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if PP2, PP3, or PPL3 is true at the end of the cycle, E_AL1_B1 should be set to 0.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "(instance.PP2 OR instance.PP3 OR instance.PPL3)",
+                    "2": "NOT instance.E_AL1_B1"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PP2 OR instance.PP3 OR instance.PPL3} is true at the end of the PLC cycle, then {NOT instance.E_AL1_B1} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if PP3 is true at the end of the cycle and neither PP0 nor PPL3 is true, MCB_CONTROL should be set to 1.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.PP3 AND NOT (instance.PP0 OR instance.PPL3)",
+                    "2": "instance.MCB_CONTROL = 1"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PP3 AND NOT (instance.PP0 OR instance.PPL3)} is true at the end of the PLC cycle, then {instance.MCB_CONTROL = 1} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if either PP0 or PPL3 is true at the end of the cycle, MCB_CONTROL should be set to 0.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "(instance.PP0 OR instance.PPL3)",
+                    "2": "NOT instance.MCB_CONTROL"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PP0 OR instance.PPL3} is true at the end of the PLC cycle, then {NOT instance.MCB_CONTROL} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if either PPL3 or PPL4 is true at the end of the cycle, and neither PP0, PP3, nor PP4 is true, PAS_AL1_PLUS and PAS_AL1_TURN should both be set to 1.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "(instance.PPL3 OR instance.PPL4) AND NOT (instance.PP0 OR instance.PP3 OR instance.PP4)",
+                    "2": "instance.PAS_AL1_PLUS = 1 AND instance.PAS_AL1_TURN = 1"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PPL3 OR instance.PPL4 AND NOT (instance.PP0 OR instance.PP3 OR instance.PP4)} is true at the end of the PLC cycle, then {instance.PAS_AL1_PLUS = 1 AND instance.PAS_AL1_TURN = 1} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if either PP0, PP3, or PP4 is true at the end of the cycle, PAS_AL1_PLUS and PAS_AL1_TURN should both be set to 0.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "(instance.PP0 OR instance.PP3 OR instance.PP4)",
+                    "2": "(NOT instance.PAS_AL1_PLUS) AND (NOT instance.PAS_AL1_TURN)"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PP0 OR instance.PP3 OR instance.PP4} is true at the end of the PLC cycle, then {NOT instance.PAS_AL1_PLUS AND NOT instance.PAS_AL1_TURN} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that if either PPAL1 or PP2 is true at the end of the cycle, PUWS_AL1_B1_PLUS should be set to 1 and PUWS_AL1_B1_RIGHT should be set to 0.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.PPAL1 OR instance.PP2",
+                    "2": "(instance.PUWS_AL1_B1_PLUS = 1) AND (NOT instance.PUWS_AL1_B1_RIGHT)"
+                },
+                "entry_point": "FB_AdvancedCircuitBreakerControl",
+                "pattern_description": "If {instance.PPAL1 OR instance.PP2} is true at the end of the PLC cycle, then {instance.PUWS_AL1_B1_PLUS = 1 AND NOT instance.PUWS_AL1_B1_RIGHT} should always be true at the end of the same cycle."
+            }
+        }
+    ],
+    "id": "v2-H-3"
+}

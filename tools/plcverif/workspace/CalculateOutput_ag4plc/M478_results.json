@@ -1,0 +1,109 @@
+{
+  "dataset_id": "v1-E-2",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478.scl",
+  "source_preparation": [],
+  "source_warnings": [],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "SATISFIED",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "assertion",
+      "description": "Verify that all assertions are satisfied in the program.",
+      "status": "SKIPPED_NO_ASSERTIONS",
+      "reason": "source contains no //#ASSERT annotations"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Verify that the output 'o' is calculated correctly for 'i' = 0.",
+      "entry": "FB_CalculateOutput",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478_vc3/M478_property_2.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Verify that the output 'o' is calculated correctly for 'i' in the range 1 to 5.",
+      "entry": "FB_CalculateOutput",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478_vc3/M478_property_3.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Verify that the output 'o' is calculated correctly for 'i' in the range 6 to 10.",
+      "entry": "FB_CalculateOutput",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478_vc3/M478_property_4.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 5,
+      "job_req": "pattern",
+      "description": "Verify that the output 'o' is -1 for any other value of 'i'.",
+      "entry": "FB_CalculateOutput",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478_vc3/M478_property_5.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 6,
+      "job_req": "pattern",
+      "description": "Verify that the program does not produce invalid outputs.",
+      "entry": "FB_CalculateOutput",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/CalculateOutput_ag4plc/scl/M478_vc3/M478_property_6.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

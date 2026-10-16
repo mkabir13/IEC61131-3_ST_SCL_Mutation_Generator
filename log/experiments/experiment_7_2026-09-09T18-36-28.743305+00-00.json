@@ -1,0 +1,18 @@
+{
+  "experiment_id": 7,
+  "timestamp": "2026-09-09T18:36:28.743305+00:00",
+  "name": "Untitled",
+  "mutation_categories_used": [
+    "relational",
+    "logical",
+    "arithmetic",
+    "boolean",
+    "constant",
+    "variable",
+    "assignment",
+    "conditional",
+    "timer"
+  ],
+  "num_mutations_generated": 4,
+  "mutations_dir": "/home/mkabir/Desktop/mutate/log/mutations/submission_7_20260909T183628Z"
+}

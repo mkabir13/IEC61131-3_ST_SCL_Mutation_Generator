@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block head_extra %}
+{% if compile_and_run_running %}
+<meta http-equiv="refresh" content="3">
+{% endif %}
+{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('dashboard.index') }}">&larr; back</a></p>
+<h1>{{ submission.name }}</h1>
+
+<h2>Step 1 &mdash; Provided ST code</h2>
+{% if submission.original_compile_ok %}
+  <p class="ok">Valid ST program &mdash; compiled successfully. Saved to Tests/ as its own file.</p>
+{% else %}
+  <p class="fail">Compilation failed &mdash; fix the code below and submit a new one from the home page.</p>
+  <pre class="error-block">{{ submission.original_compile_stderr }}</pre>
+{% endif %}
+<details {% if not submission.original_compile_ok %}open{% endif %}>
+  <summary>View original ST code (never modified)</summary>
+  <pre class="code-block">{{ submission.original_code }}</pre>
+</details>
+
+{% if not submission.original_compile_ok %}
+<p class="muted">Note: this code doesn't compile in your project's current Library/Programcontroller/Config harness -- mutations are generated anyway below, since that's independent of compilation. "Compile and Run" may fail until the harness mismatch is resolved.</p>
+{% endif %}
+
+<h2>Step 2 &mdash; Generate Mutations</h2>
+
+{% if not submission.generated %}
+  {% if structure %}
+  <details>
+    <summary>Structure summary (not a full AST &mdash; MATIEC's compile above is the authoritative parser)</summary>
+    <table class="results-table">
+      <tbody>
+        <tr><th>POU type</th><td>{{ structure.pou_type or "not detected" }}</td></tr>
+        <tr><th>POU name</th><td>{{ structure.pou_name or "not detected" }}</td></tr>
+        <tr><th>Variables declared</th><td>{{ structure.variables|length }}</td></tr>
+        <tr><th>Timer instances</th><td>{{ structure.timers|length }}</td></tr>
+        <tr><th>Edge detector instances</th><td>{{ structure.edges|length }}</td></tr>
+        <tr><th>IF statements</th><td>{{ structure.if_count }}</td></tr>
+      </tbody>
+    </table>
+  </details>
+  {% else %}
+  <p class="muted">(Structure summary unavailable for this file -- does not block mutation generation.)</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('dashboard.generate', submission_id=submission.id) }}" class="mutation-form">
+    <div class="category-grid">
+      {% for cat_id, cat_name in categories %}
+      <label class="category-checkbox">
+        <input type="checkbox" name="categories" value="{{ cat_id }}" checked> {{ cat_name }}
+      </label>
+      {% endfor %}
+    </div>
+    <div class="category-actions">
+      <button type="button" onclick="setAllCategories(true)">Select All</button>
+      <button type="button" onclick="setAllCategories(false)">Clear All</button>
+    </div>
+    <button type="submit" class="primary-btn" id="generate-btn">Generate Mutations</button>
+  </form>
+  <script>
+  function setAllCategories(checked) {
+    document.querySelectorAll('.category-checkbox input[type=checkbox]').forEach(cb => cb.checked = checked);
+  }
+  </script>
+
+{% else %}
+  <p class="ok">{{ submission.mutant_count() }} mutant(s) generated, saved to Tests/mutatedCode/.</p>
+{% endif %}
+
+{% if submission.generated %}
+
+<div class="summary-cards">
+  <div class="summary-card"><div class="summary-label">Total Mutants</div><div class="summary-value">{{ submission.mutant_count() }}</div></div>
+  <div class="summary-card">
+    <div class="summary-label">Active mutant</div>
+    <div class="summary-value">{% if active_mutant %}{{ active_mutant.display_id }}{% else %}--{% endif %}</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Compile and Run</div>
+    <div class="summary-value">
+      {% if submission.compile_run_ok is none %}<span class="muted">not run</span>
+      {% elif submission.compile_run_ok %}<span class="ok">success</span>
+      {% else %}<span class="fail">failed</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<p>
+  <a href="{{ url_for('dashboard.export_csv', submission_id=submission.id) }}">Export CSV</a> &middot;
+  <a href="{{ url_for('dashboard.export_json', submission_id=submission.id) }}">Export JSON</a>
+</p>
+
+<h2>Monitor</h2>
+<div class="monitor">
+  {% if mutants %}
+  <div class="monitor-step">
+    <div class="monitor-step-title">Step 2 &mdash; Generate Mutations ({{ mutants|length }} mutant(s) generated)</div>
+    <ul class="mutant-summary-list">
+      {% for m in mutants %}
+      <li>
+        <strong>{{ m.display_id }}</strong> &mdash; {{ m.operator_id }} ({{ m.category }}) at <code>{{ m.location_id }}</code>:
+        <mark class="hl-removed">{{ m.original_snippet }}</mark> &rarr; <mark class="hl-added">{{ m.mutated_snippet }}</mark>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+
+<h3>Generated mutation code</h3>
+<div class="button-row" style="margin: 8px 0;">
+  {% if scl_mode %}
+    <span class="ok">SCL view</span>
+    <a href="{{ url_for('dashboard.view_submission', submission_id=submission.id) }}">Back to ST</a>
+  {% else %}
+    <form method="post" action="{{ url_for('dashboard.generate_scl', submission_id=submission.id) }}">
+      <button type="submit" class="primary-btn" id="scl-btn">SCL</button>
+    </form>
+  {% endif %}
+</div>
+<p class="muted">
+  {% if scl_mode %}
+    SCL-formatted copies were saved to <code>Tests/mutatedCode/scl/</code> (one <code>.scl</code> file per mutant). Formatting is cosmetic only &mdash; single-line <code>(* ... *)</code> comments become <code>//</code>; declarations, operators, and block keywords are unchanged. Not verified against a Siemens compiler.
+  {% else %}
+    The SCL button saves an SCL-formatted copy of every mutant to <code>Tests/mutatedCode/scl/</code>. Nothing is written there unless you press it.
+  {% endif %}
+</p>
+{% for hm in highlighted_mutants %}
+<details class="mutant-code-block">
+  <summary>{{ hm.mutant.display_id }} &mdash; {{ hm.mutant.operator_id }} ({{ hm.mutant.category }})</summary>
+  {% if scl_mode %}
+  <pre class="code-block highlighted-code scl-view">```scl
+{{ hm.mutated_scl_html|safe }}
+```</pre>
+  {% else %}
+  <pre class="code-block highlighted-code st-view">```st
+{{ hm.mutated_html|safe }}
+```</pre>
+  {% endif %}
+</details>
+{% endfor %}
+
+{% if mutants %}
+<div class="button-row" style="margin: 16px 0;">
+  {% if compile_and_run_running %}
+    <span class="muted">&#9203; Running&hellip; this page refreshes automatically.</span>
+    <form method="post" action="{{ url_for('dashboard.stop', submission_id=submission.id) }}">
+      <button type="submit" class="primary-btn stop-btn">Stop</button>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('dashboard.compile_and_run', submission_id=submission.id) }}">
+      <button type="submit" class="primary-btn">Compile and Run</button>
+    </form>
+    <span class="muted">Runs <code>compile_and_run.py</code> &mdash; mergeSTcode.py, then statement.sh, in one step.</span>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="monitor">
+  {% if submission.compile_run_log %}
+  <div class="monitor-step">
+    <div class="monitor-step-title">
+      Step 3/4 &mdash; Compile and Run ({{ active_mutant.display_id if active_mutant }} via <code>compile_and_run.py</code>)
+      {% if submission.compile_run_ok %}<span class="ok">SUCCESS</span>{% else %}<span class="fail">FAILED</span>{% endif %}
+    </div>
+    <pre class="monitor-log">{{ submission.compile_run_log }}</pre>
+  </div>
+  {% endif %}
+</div>
+
+<h2>Mutants</h2>
+{% set ds = submission.distinguish_summary() %}
+{% if ds.searched > 0 %}
+<div class="summary-cards">
+  <div class="summary-card"><div class="summary-label">DistinguishSearch run</div><div class="summary-value">{{ ds.searched }}</div></div>
+  <div class="summary-card"><div class="summary-label">Killed (no refinement needed)</div><div class="summary-value ok">{{ ds.killed_no_refinement }}</div></div>
+  <div class="summary-card"><div class="summary-label">Killed by C-DET refinement</div><div class="summary-value ok">{{ ds.killed_by_refinement }}</div></div>
+  <div class="summary-card"><div class="summary-label">Still undetermined</div><div class="summary-value fail">{{ ds.undetermined }}</div></div>
+</div>
+<p class="muted">A small, real comparison in the spirit of the paper's RQ4 (does diagnosis-guided refinement help beyond the baseline search?) &mdash; scoped to this submission's mutants, not a controlled multi-program study.</p>
+{% endif %}
+{% if mutants %}
+<table class="results-table">
+  <thead><tr><th>Mutant ID</th><th>Operator</th><th>Category</th><th>Change</th><th>Status</th><th>Action</th></tr></thead>
+  <tbody>
+    {% for m in mutants %}
+    <tr {% if active_mutant and m.id == active_mutant.id %}class="active-row"{% endif %}>
+      <td><strong>{{ m.display_id }}</strong>{% if active_mutant and m.id == active_mutant.id %} <span class="ok">(active)</span>{% endif %}</td>
+      <td>{{ m.operator_id }}</td>
+      <td>{{ m.category }}</td>
+      <td><code>{{ m.original_snippet }}</code> &rarr; <code>{{ m.mutated_snippet }}</code></td>
+      <td>
+        {% if m.compile_ok is none %}<span class="muted">not tested</span>
+        {% elif m.compile_ok %}<span class="ok">Success</span>
+        {% else %}<span class="fail">Failed</span>{% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('dashboard.view_mutant', submission_id=submission.id, mutant_id=m.id) }}">View</a>
+        {% if not (active_mutant and m.id == active_mutant.id) %}
+        &middot;
+        <form method="post" action="{{ url_for('dashboard.activate_mutant', submission_id=submission.id, mutant_id=m.id) }}" style="display:inline">
+          <button type="submit" class="link-btn">Set active</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No mutants were generated for the selected categories.</p>
+{% endif %}
+
+{% endif %}
+{% endblock %}

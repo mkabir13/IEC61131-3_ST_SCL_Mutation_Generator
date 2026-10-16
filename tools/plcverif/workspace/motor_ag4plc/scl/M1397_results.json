@@ -1,0 +1,48 @@
+{
+  "dataset_id": "v1-E-1",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/motor_ag4plc/scl/M1397.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/motor_ag4plc/scl/M1397.scl",
+  "source_preparation": [],
+  "source_warnings": [],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "VIOLATED",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "pattern",
+      "description": "Verify that the motor is not considered critical if the pressure is above or equal to the threshold.",
+      "entry": "FB_MotorControl",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "VIOLATED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/motor_ag4plc/scl/M1397_vc3/M1397_property_1.vc3",
+      "status": "VIOLATED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Verify that the pressure values are within safe ranges.",
+      "entry": "FB_MotorControl",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "VIOLATED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/motor_ag4plc/scl/M1397_vc3/M1397_property_2.vc3",
+      "status": "VIOLATED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

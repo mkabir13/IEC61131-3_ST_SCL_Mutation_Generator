@@ -1,0 +1,167 @@
+{
+  "dataset_id": "v2-H-3",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991.scl",
+  "source_preparation": [],
+  "source_warnings": [],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "UNKNOWN",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "pattern",
+      "description": "Ensure that if either PP0 or PP1 is true at the end of the cycle, and neither PP2, PP3, nor PPL3 is true, the output E_AL1_B1 should be set to 1.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [
+        "instance.E_AL1_B1 is Bool: '1' rewritten to TRUE",
+        "expression rewritten for entry 'FB_AdvancedCircuitBreakerControl'"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_1.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Ensure that if PP2, PP3, or PPL3 is true at the end of the cycle, E_AL1_B1 should be set to 0.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "UNKNOWN"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_2_classic.vc3",
+      "status": "UNKNOWN",
+      "reason": "backend returned unknown (timeout or incomplete)",
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Ensure that if PP3 is true at the end of the cycle and neither PP0 nor PPL3 is true, MCB_CONTROL should be set to 1.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [
+        "instance.MCB_CONTROL is Bool: '1' rewritten to TRUE",
+        "expression rewritten for entry 'FB_AdvancedCircuitBreakerControl'"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_3.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Ensure that if either PP0 or PPL3 is true at the end of the cycle, MCB_CONTROL should be set to 0.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "UNKNOWN"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_4_classic.vc3",
+      "status": "UNKNOWN",
+      "reason": "backend returned unknown (timeout or incomplete)",
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 5,
+      "job_req": "pattern",
+      "description": "Ensure that if either PPL3 or PPL4 is true at the end of the cycle, and neither PP0, PP3, nor PP4 is true, PAS_AL1_PLUS and PAS_AL1_TURN should both be set to 1.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [
+        "instance.PAS_AL1_PLUS is Bool: '1' rewritten to TRUE",
+        "instance.PAS_AL1_TURN is Bool: '1' rewritten to TRUE",
+        "expression rewritten for entry 'FB_AdvancedCircuitBreakerControl'"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_5_classic.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 6,
+      "job_req": "pattern",
+      "description": "Ensure that if either PP0, PP3, or PP4 is true at the end of the cycle, PAS_AL1_PLUS and PAS_AL1_TURN should both be set to 0.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "UNKNOWN"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_6_classic.vc3",
+      "status": "UNKNOWN",
+      "reason": "backend returned unknown (timeout or incomplete)",
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 7,
+      "job_req": "pattern",
+      "description": "Ensure that if either PPAL1 or PP2 is true at the end of the cycle, PUWS_AL1_B1_PLUS should be set to 1 and PUWS_AL1_B1_RIGHT should be set to 0.",
+      "entry": "FB_AdvancedCircuitBreakerControl",
+      "notes": [
+        "instance.PUWS_AL1_B1_PLUS is Bool: '1' rewritten to TRUE",
+        "expression rewritten for entry 'FB_AdvancedCircuitBreakerControl'"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M991_vc3/M991_property_7.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "dataset_id": "v1-M-1",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421.prepared.scl",
+  "source_preparation": [
+    "type widening line 10: UInt -> DInt",
+    "type widening line 13: UInt -> DInt",
+    "widened types keep every value of the original range; only overflow wrap-around differs"
+  ],
+  "source_warnings": [
+    "MAIN: block has no inputs and nothing could be freed; with it as entry the model is deterministic"
+  ],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "ERROR",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "assertion",
+      "description": "Verify that all assertions are satisfied in the program.",
+      "entry": "MAIN",
+      "notes": [
+        "entry 'MAIN' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "ERROR"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421_property_1.vc3",
+      "status": "ERROR",
+      "reason": "The file '/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421.prepared.scl' contains the following errors: (+1 more distinct errors)",
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Verify that the relay is updated based on the value of GT1_OUT.",
+      "entry": "MAIN",
+      "notes": [
+        "entry 'MAIN' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "ERROR"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421_property_2.vc3",
+      "status": "ERROR",
+      "reason": "The file '/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421.prepared.scl' contains the following errors: (+1 more distinct errors)",
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Verify that the temp_sensor does not overflow during the FOR loop.",
+      "entry": "MAIN",
+      "notes": [
+        "entry 'MAIN' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "ERROR"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421_property_3.vc3",
+      "status": "ERROR",
+      "reason": "The file '/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421.prepared.scl' contains the following errors: (+1 more distinct errors)",
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Verify that the error flag is not set to FALSE.",
+      "entry": "MAIN",
+      "notes": [
+        "entry 'MAIN' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "ERROR"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421_property_4.vc3",
+      "status": "ERROR",
+      "reason": "The file '/home/mkabir/Desktop/mutate/tools/plcverif/workspace/pressure_sensors_m/scl/M1421_vc3/M1421.prepared.scl' contains the following errors: (+1 more distinct errors)",
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

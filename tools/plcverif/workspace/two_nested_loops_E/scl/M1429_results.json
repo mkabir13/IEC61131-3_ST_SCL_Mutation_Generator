@@ -1,0 +1,106 @@
+{
+  "dataset_id": "v1-E-3",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429.scl",
+  "source_preparation": [],
+  "source_warnings": [
+    "FB_NestedLoopControl: block has no inputs and nothing could be freed; with it as entry the model is deterministic"
+  ],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "UNKNOWN",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "assertion",
+      "description": "Verify that all assertions are satisfied in the program.",
+      "entry": "FB_NestedLoopControl",
+      "notes": [
+        "entry 'FB_NestedLoopControl' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "UNKNOWN"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429_vc3/M1429_property_1_classic.vc3",
+      "status": "UNKNOWN",
+      "reason": "backend returned unknown (timeout or incomplete)",
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Ensure that the count does not exceed the total number of iterations possible in the inner loop.",
+      "entry": "FB_NestedLoopControl",
+      "notes": [
+        "entry 'FB_NestedLoopControl' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "UNKNOWN"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429_vc3/M1429_property_2_classic.vc3",
+      "status": "UNKNOWN",
+      "reason": "backend returned unknown (timeout or incomplete)",
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Ensure that i does not exceed its bounds (0 to 10).",
+      "entry": "FB_NestedLoopControl",
+      "notes": [
+        "entry 'FB_NestedLoopControl' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "UNKNOWN"
+        },
+        {
+          "algorithm": "Classic",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429_vc3/M1429_property_3_classic.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Classic"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Ensure that j does not exceed its bounds (10 to 100).",
+      "entry": "FB_NestedLoopControl",
+      "notes": [
+        "entry 'FB_NestedLoopControl' has no inputs in the verified copy: the model is deterministic, so a SATISFIED result covers only one execution"
+      ],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1429_vc3/M1429_property_4.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

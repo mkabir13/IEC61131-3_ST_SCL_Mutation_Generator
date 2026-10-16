@@ -1,0 +1,144 @@
+In file included from ../matiec/lib/C/iec_std_FB.h:35,
+                 from ../matiec/lib/C/iec_std_lib.h:859,
+                 from Config0.c:6:
+../Tests/TestCode.st: In function ‘GEN_SIN_body__’:
+../Tests/TestCode.st:360:26: warning: implicit declaration of function ‘_____time_sub’; did you mean ‘__time_sub’? [-Wimplicit-function-declaration]
+  360 |   tx:= UDINT_TO_TIME(T_PLC_MS(en:=true)) - last;
+      |                          ^~~~~~~~~~~~~
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:360:26: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  360 |   tx:= UDINT_TO_TIME(T_PLC_MS(en:=true)) - last;
+      |                          ^~~~~~~~~~~~~
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:374:35: warning: implicit declaration of function ‘_____time_add’; did you mean ‘__time_add’? [-Wimplicit-function-declaration]
+  374 |         last := last + pt;
+      |                                   ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:374:35: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  374 |         last := last + pt;
+      |                                   ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:375:33: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  375 |         tx := tx - pt;
+      |                                 ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+In file included from Config0.c:15:
+../Tests/TestCode.st:379:5: error: conversion to non-scalar type requested
+  379 |   IF pt > t#0s THEN temp := SIN(6.283185307179586476 * TIME_TO_REAL(tx + multime(pt, dl)) / TIME_TO_REAL(pt)); END_IF;
+      |     ^~~~~~~~~
+In file included from Config0.c:15:
+../Tests/TestCode.st: In function ‘TESTRUNNERPROGRAM_body__’:
+../Tests/TestCode.st:402:1: warning: implicit declaration of function ‘printf’ [-Wimplicit-function-declaration]
+  402 | 
+      | ^     
+In file included from Config0.c:15:
+../Tests/TestCode.st:8:1: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+    7 | 
+  +++ |+#include <stdio.h>
+    8 |   BIT_OF_DWORD := (SHR(in,N) AND 16#00000001) > 0;
+In file included from Config0.c:15:
+../Tests/TestCode.st:402:1: warning: incompatible implicit declaration of built-in function ‘printf’ [-Wbuiltin-declaration-mismatch]
+  402 | 
+      | ^     
+../Tests/TestCode.st:402:1: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+In file included from ../matiec/lib/C/iec_std_FB.h:35,
+                 from ../matiec/lib/C/iec_std_lib.h:859,
+                 from Res0.c:6:
+../Tests/TestCode.st: In function ‘GEN_SIN_body__’:
+../Tests/TestCode.st:360:26: warning: implicit declaration of function ‘_____time_sub’; did you mean ‘__time_sub’? [-Wimplicit-function-declaration]
+  360 |   tx:= UDINT_TO_TIME(T_PLC_MS(en:=true)) - last;
+      |                          ^~~~~~~~~~~~~
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:360:26: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  360 |   tx:= UDINT_TO_TIME(T_PLC_MS(en:=true)) - last;
+      |                          ^~~~~~~~~~~~~
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:374:35: warning: implicit declaration of function ‘_____time_add’; did you mean ‘__time_add’? [-Wimplicit-function-declaration]
+  374 |         last := last + pt;
+      |                                   ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:374:35: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  374 |         last := last + pt;
+      |                                   ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+../Tests/TestCode.st:375:33: error: incompatible types when assigning to type ‘IEC_TIME’ {aka ‘IEC_TIMESPEC’} from type ‘int’
+  375 |         tx := tx - pt;
+      |                                 ^            
+../matiec/lib/C/accessor.h:127:81: note: in definition of macro ‘__SET_VAR’
+  127 |         if (!(prefix name.flags & __IEC_FORCE_FLAG)) prefix name.value suffix = new_value
+      |                                                                                 ^~~~~~~~~
+In file included from Res0.c:18:
+../Tests/TestCode.st:379:5: error: conversion to non-scalar type requested
+  379 |   IF pt > t#0s THEN temp := SIN(6.283185307179586476 * TIME_TO_REAL(tx + multime(pt, dl)) / TIME_TO_REAL(pt)); END_IF;
+      |     ^~~~~~~~~
+In file included from Res0.c:18:
+../Tests/TestCode.st: In function ‘TESTRUNNERPROGRAM_body__’:
+../Tests/TestCode.st:402:1: warning: implicit declaration of function ‘printf’ [-Wimplicit-function-declaration]
+  402 | 
+      | ^     
+In file included from Res0.c:18:
+../Tests/TestCode.st:8:1: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+    7 | 
+  +++ |+#include <stdio.h>
+    8 |   BIT_OF_DWORD := (SHR(in,N) AND 16#00000001) > 0;
+In file included from Res0.c:18:
+../Tests/TestCode.st:402:1: warning: incompatible implicit declaration of built-in function ‘printf’ [-Wbuiltin-declaration-mismatch]
+  402 | 
+      | ^     
+../Tests/TestCode.st:402:1: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+LOCATED_VARIABLES.h: In function ‘run’:
+plc.c:46:34: warning: format ‘%d’ expects argument of type ‘int’, but argument 3 has type ‘INT *’ {aka ‘short int *’} [-Wformat=]
+   46 | #define __print_INT(name) printf("  %s = (INT) %d\n",#name, name);
+      |                                  ^~~~~~~~~~~~~~~~~~~
+plc.c:104:39: note: in expansion of macro ‘__print_INT’
+  104 | #define __LOCATED_VAR(type, name,...) __print_##type(name);
+      |                                       ^~~~~~~~
+LOCATED_VARIABLES.h:2:1: note: in expansion of macro ‘__LOCATED_VAR’
+    2 | __LOCATED_VAR(INT,__QW0,Q,W,0)
+      | ^~~~~~~~~~~~~
+plc.c:46:49: note: format string is defined here
+   46 | #define __print_INT(name) printf("  %s = (INT) %d\n",#name, name);
+      |                                                ~^
+      |                                                 |
+      |                                                 int
+      |                                                %hn
+plc.c:46:34: warning: format ‘%d’ expects argument of type ‘int’, but argument 3 has type ‘INT *’ {aka ‘short int *’} [-Wformat=]
+   46 | #define __print_INT(name) printf("  %s = (INT) %d\n",#name, name);
+      |                                  ^~~~~~~~~~~~~~~~~~~
+plc.c:104:39: note: in expansion of macro ‘__print_INT’
+  104 | #define __LOCATED_VAR(type, name,...) __print_##type(name);
+      |                                       ^~~~~~~~
+LOCATED_VARIABLES.h:3:1: note: in expansion of macro ‘__LOCATED_VAR’
+    3 | __LOCATED_VAR(INT,__QW1,Q,W,1)
+      | ^~~~~~~~~~~~~
+plc.c:46:49: note: format string is defined here
+   46 | #define __print_INT(name) printf("  %s = (INT) %d\n",#name, name);
+      |                                                ~^
+      |                                                 |
+      |                                                 int
+      |                                                %hn
+main.c: In function ‘main’:
+main.c:134:5: warning: implicit declaration of function ‘config_init__’ [-Wimplicit-function-declaration]
+  134 |     config_init__();
+      |     ^~~~~~~~~~~~~
+main.c:143:5: warning: implicit declaration of function ‘pause’ [-Wimplicit-function-declaration]
+  143 |     pause();
+      |     ^~~~~

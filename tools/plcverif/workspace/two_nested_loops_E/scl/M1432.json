@@ -1,0 +1,45 @@
+{
+    "id": "v1-E-3",
+    "instruction": " Use structured text (ST code) to design a function block (FB) for a PLC program that involves two nested loops.\nThe outer loop (i) iterates from 0 to 10, and the inner loop (j) iterates from 10 to 100 with a step size of 2.\nDuring each iteration, if the flag is TRUE, the loop exits, and the count is updated\nto keep track of how many times the inner loop executed.\nEnsure that the count does not exceed the expected maximum of iterations\nand that loop variables stay within their defined bounds.\n\nFUNCTION_BLOCK FB_NestedLoopControl\nVAR\ni : INT;\nj : INT;\nflag : BOOL;\ncount : INT := 0;\nsome_var : INT;\nEND_VAR\n\nEND_FUNCTION_BLOCK ",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Ensure that the count does not exceed the total number of iterations possible in the inner loop.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.count <= 46"
+                },
+                "pattern_description": "{1} is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that i does not exceed its bounds (0 to 10).",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.i >= 0 AND instance.i <= 10"
+                },
+                "pattern_description": "{1} is always true at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that j does not exceed its bounds (10 to 100).",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.j >= 10 AND instance.j <= 100"
+                },
+                "pattern_description": "{1} is always true at the end of the PLC cycle."
+            }
+        }
+    ]
+}

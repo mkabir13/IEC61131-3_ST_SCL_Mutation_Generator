@@ -1,0 +1,79 @@
+{
+  "id": "v1-M-4",
+  "source_file": "fibonacci_number_m.scl",
+  "function_block": "FB_Fibonacci_Calculator",
+  "properties_to_be_validated": [
+    {
+      "property_description": "Verify that all assertions are satisfied in the program.",
+      "property": {
+        "job_req": "assertion"
+      }
+    },
+    {
+      "property_description": "Ensure that the output O is always a non-negative integer.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 30",
+          "2": "instance.O >= 0"
+        }
+      }
+    },
+    {
+      "property_description": "Ensure that the output O is 1 if N is less than or equal to 2.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 2",
+          "2": "instance.O = 1"
+        }
+      }
+    },
+    {
+      "property_description": "Ensure that the program does not enter an infinite loop.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 30",
+          "2": "instance.CNT <= instance.N"
+        }
+      }
+    },
+    {
+      "property_description": "Ensure that the output O is equal to the sum of the previous two Fibonacci numbers if N is greater than 2, unless saturation occurs.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 30 AND instance.N > 2 AND instance.O < 32767",
+          "2": "instance.O = instance.F1 + instance.F2"
+        }
+      }
+    },
+    {
+      "property_description": "Ensure that the output O and intermediate values do not exceed 32767.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 30",
+          "2": "instance.O <= 32767 AND instance.F1 <= 32767 AND instance.F2 <= 32767"
+        }
+      }
+    },
+    {
+      "property_description": "Ensure that if overflow occurs, the output O is set to the maximum allowable value of 32767.",
+      "property": {
+        "job_req": "pattern",
+        "pattern_id": "pattern-implication",
+        "pattern_params": {
+          "1": "instance.N >= 0 AND instance.N <= 30 AND (instance.O > 32767 OR instance.O < 0)",
+          "2": "instance.O = 32767"
+        }
+      }
+    }
+  ]
+}

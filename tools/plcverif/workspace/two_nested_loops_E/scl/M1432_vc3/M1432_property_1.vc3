@@ -1,0 +1,13 @@
+-description = "Verify that all assertions are satisfied in the program."
+-id = verify_v1_E_3_property_1
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = assertion
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_NestedLoopControl
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1432.scl"

@@ -1,0 +1,16 @@
+-description = "Ensure that Breaker B10_2 correctly transitions to closed when it receives the close signal."
+-id = verify_v2_H_1_property_3
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "instance.B10_2_Close = TRUE"
+-job.req.pattern_params.2 = "instance.B10_2_Closed = TRUE AND instance.B10_2_Opened = FALSE"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_BreakerControlSystem
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1464.scl"

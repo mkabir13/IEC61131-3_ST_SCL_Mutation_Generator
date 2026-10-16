@@ -1,0 +1,54 @@
+FUNCTION_BLOCK "FB_LoopCounter"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+
+VAR_INPUT
+    i : Bool;      // Trigger input for the counter
+END_VAR
+
+VAR_OUTPUT
+    o : Int;       // Current value of the counter
+END_VAR
+
+VAR
+    macro : Int := 1;   // Current count
+    micro : Int := 1;   // Control variable for counting down
+END_VAR
+
+BEGIN
+
+    IF #i THEN
+
+        // Count micro down, never below zero
+        IF #micro > 0 THEN
+            #micro := #micro - 2; // MUTATED: CONST_VALUE_REPLACE
+        END_IF;
+
+        // micro reached zero: increment macro (saturating at 32767)
+        // and reload micro with the new macro value
+        IF #micro <= 0 THEN
+            IF #macro < 32767 THEN
+                #macro := #macro + 1;
+            END_IF;
+            #micro := #macro;
+        END_IF;
+
+    END_IF;
+
+    // Defensive guards: state can never become zero or negative
+    IF #macro < 1 THEN
+        #macro := 1;
+    END_IF;
+
+    IF #micro < 0 THEN
+        #micro := #macro;
+    END_IF;
+
+    // Output the current count (always >= 1)
+    #o := #macro;
+
+    //#ASSERT micro >= 0
+    //#ASSERT macro >= 1
+    //#ASSERT o > 0
+
+END_FUNCTION_BLOCK

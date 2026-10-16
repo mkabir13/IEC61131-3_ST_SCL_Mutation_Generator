@@ -1,0 +1,12 @@
+PROGRAM TestRunnerProgram
+VAR
+  testResult AT %QX0.0 : BOOL := FALSE;
+END_VAR
+VAR
+  totalTests AT %QW0 : INT := 0;
+  passedTests AT %QW1 : INT := 0;
+END_VAR
+
+
+{printf("=== T0 is called ===\n");}
+END_PROGRAM

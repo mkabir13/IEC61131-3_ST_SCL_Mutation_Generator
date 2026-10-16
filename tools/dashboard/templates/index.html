@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>ST Mutation Dashboard</h1>
+
+<form method="post" action="{{ url_for('dashboard.submit') }}" enctype="multipart/form-data" class="submit-form">
+  <label>Name
+    <input type="text" name="name" placeholder="PumpControl" value="{{ request.form.get('name', '') }}">
+  </label>
+
+  <label>ST code (paste here)
+    <textarea name="original_code" rows="14" placeholder="FUNCTION_BLOCK PumpControl&#10;VAR_INPUT&#10;  Start : BOOL;&#10;END_VAR&#10;...">{{ request.form.get('original_code', '') }}</textarea>
+  </label>
+
+  <label>...or upload a .st file instead
+    <input type="file" name="st_file" accept=".st,.txt">
+  </label>
+
+  <p class="muted">Validated through your project's real merge (Library &rarr; this code &rarr; Programcontroller &rarr; Config, from <code>Tests/</code>). Saved as-is to <code>Tests/</code> and never overwritten by any mutation.</p>
+
+  <h2>Mutation options</h2>
+  <div class="category-grid">
+    {% for cat_id, cat_name in categories %}
+    <label class="category-checkbox">
+      <input type="checkbox" name="categories" value="{{ cat_id }}" checked> {{ cat_name }}
+    </label>
+    {% endfor %}
+  </div>
+  <div class="category-actions">
+    <button type="button" onclick="setAllCategories(true)">Select All</button>
+    <button type="button" onclick="setAllCategories(false)">Clear All</button>
+  </div>
+
+  <div class="button-row" style="margin-top: 8px;">
+    <button type="submit" class="primary-btn" id="generate-btn">Generate Mutations</button>
+    <button type="button" class="primary-btn" disabled title="Generate mutations first">Compile and Run</button>
+  </div>
+  <p class="muted">Compile and Run unlocks once mutations exist for this submission &mdash; you'll see it enabled on the results page below. It runs <code>compile_and_run.py</code>, which itself runs <code>mergeSTcode.py</code> then <code>statement.sh</code>.</p>
+</form>
+<script>
+function setAllCategories(checked) {
+  document.querySelectorAll('.category-checkbox input[type=checkbox]').forEach(cb => cb.checked = checked);
+}
+</script>
+
+<h2>Recent submissions</h2>
+{% if submissions %}
+<table class="results-table">
+  <thead><tr><th>Name</th><th>Submitted</th><th>Validation</th><th>Mutants</th><th>Active mutant</th></tr></thead>
+  <tbody>
+    {% for s in submissions %}
+    <tr>
+      <td><a href="{{ url_for('dashboard.view_submission', submission_id=s.id) }}">{{ s.name }}</a></td>
+      <td>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>{% if s.original_compile_ok %}<span class="ok">valid ST</span>{% else %}<span class="fail">invalid</span>{% endif %}</td>
+      <td>
+        {% if s.generated %}{{ s.mutant_count() }} generated{% else %}<span class="muted">not generated yet</span>{% endif %}
+      </td>
+      <td>
+        {% if s.active_mutant_id %}
+          M{{ '%03d' % s.active_mutant_id }}
+          {% if s.compile_run_ok is none %}<span class="muted">(not run)</span>
+          {% elif s.compile_run_ok %}<span class="ok">(passed)</span>
+          {% else %}<span class="fail">(failed)</span>{% endif %}
+        {% else %}<span class="muted">--</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No submissions yet.</p>
+{% endif %}
+{% endblock %}

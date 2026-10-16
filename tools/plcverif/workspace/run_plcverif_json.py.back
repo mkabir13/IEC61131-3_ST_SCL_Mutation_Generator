@@ -1,0 +1,984 @@
+#!/usr/bin/env python3
+
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+# ============================================================
+# LOCATIONS
+# ============================================================
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PLCVERIF = SCRIPT_DIR.parent / "plcverif-cli"
+
+
+# ============================================================
+# FIND NUXMV
+# ============================================================
+
+def find_nuxmv():
+
+    candidates = [
+        SCRIPT_DIR.parent
+        / "nuXmv-2.2.0-linux64"
+        / "usr"
+        / "local"
+        / "bin"
+        / "nuXmv",
+
+        SCRIPT_DIR.parent
+        / "nuXmv-2.2.0-linux64(1)"
+        / "usr"
+        / "local"
+        / "bin"
+        / "nuXmv",
+
+        SCRIPT_DIR.parent
+        / "nuXmv"
+        / "usr"
+        / "local"
+        / "bin"
+        / "nuXmv",
+    ]
+
+    for candidate in candidates:
+
+        if candidate.exists() and candidate.is_file():
+
+            return candidate.resolve()
+
+    system_nuxmv = shutil.which("nuXmv")
+
+    if system_nuxmv:
+
+        return Path(system_nuxmv).resolve()
+
+    system_nusmv = shutil.which("NuSMV")
+
+    if system_nusmv:
+
+        return Path(system_nusmv).resolve()
+
+    return None
+
+
+# ============================================================
+# FIND SCL / ST SOURCE
+# ============================================================
+
+def find_source_file(json_file):
+
+    directory = json_file.parent
+    stem = json_file.stem
+
+    candidates = [
+        directory / f"{stem}.scl",
+        directory / f"{stem}.st",
+    ]
+
+    for candidate in candidates:
+
+        if candidate.exists():
+
+            return candidate
+
+    source_files = sorted(
+        list(directory.glob("*.scl"))
+        + list(directory.glob("*.st"))
+    )
+
+    if len(source_files) == 1:
+
+        return source_files[0]
+
+    if len(source_files) == 0:
+
+        raise FileNotFoundError(
+            f"No .scl or .st source file found in:\n{directory}"
+        )
+
+    raise RuntimeError(
+        "Could not uniquely determine the SCL/ST source file.\n\n"
+        "Found multiple source files:\n"
+        + "\n".join(
+            f"  {f.name}"
+            for f in source_files
+        )
+        + "\n\n"
+        "Use the same base filename for JSON and SCL/ST, "
+        "or keep only one SCL/ST source file in the directory."
+    )
+
+
+# ============================================================
+# FIND FUNCTION BLOCK
+# ============================================================
+
+def find_function_block_name(source_file):
+
+    text = source_file.read_text(
+        encoding="utf-8",
+        errors="ignore"
+    )
+
+    patterns = [
+        r'\bFUNCTION_BLOCK\s+"([^"]+)"',
+        r'\bFUNCTION_BLOCK\s+([A-Za-z_][A-Za-z0-9_]*)',
+    ]
+
+    for pattern in patterns:
+
+        match = re.search(
+            pattern,
+            text,
+            re.IGNORECASE
+        )
+
+        if match:
+
+            return match.group(1)
+
+    raise RuntimeError(
+        f"No FUNCTION_BLOCK declaration found in:\n{source_file}"
+    )
+
+
+# ============================================================
+# ESCAPE VC3 STRING
+# ============================================================
+
+def escape_vc3_string(value):
+
+    return (
+        str(value)
+        .replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", " ")
+        .replace("\r", " ")
+    )
+
+
+# ============================================================
+# CREATE VC3
+# ============================================================
+
+def create_vc3(
+    json_data,
+    property_data,
+    property_index,
+    source_file,
+    fb_name,
+    nuxmv_path
+):
+
+    prop = property_data.get(
+        "property",
+        {}
+    )
+
+    job_req = prop.get(
+        "job_req"
+    )
+
+    if job_req == "assertion":
+
+        raise ValueError(
+            "job_req='assertion' is not supported. "
+            "Use a pattern property instead."
+        )
+
+    if job_req != "pattern":
+
+        raise ValueError(
+            f"Unsupported job_req='{job_req}'. "
+            f"Expected 'pattern'."
+        )
+
+    pattern_id = prop.get(
+        "pattern_id"
+    )
+
+    if not pattern_id:
+
+        raise ValueError(
+            f"Property {property_index} has no pattern_id."
+        )
+
+    pattern_params = prop.get(
+        "pattern_params",
+        {}
+    )
+
+    dataset_id = str(
+        json_data.get(
+            "id",
+            "dataset"
+        )
+    )
+
+    safe_dataset_id = re.sub(
+        r"[^A-Za-z0-9_]+",
+        "_",
+        dataset_id
+    )
+
+    description = property_data.get(
+        "property_description",
+        f"Property {property_index}"
+    )
+
+    description = escape_vc3_string(
+        description
+    )
+
+    lines = []
+
+    lines.append(
+        f'-description = "{description}"'
+    )
+
+    lines.append(
+        f'-id = verify_{safe_dataset_id}_property_{property_index}'
+    )
+
+    lines.append(
+        "-job = verif"
+    )
+
+    # --------------------------------------------------------
+    # NUSMV BACKEND
+    # --------------------------------------------------------
+
+    lines.append(
+        "-job.backend = nusmv"
+    )
+
+    lines.append(
+        "-job.backend.algorithm = KInduction"
+    )
+
+    lines.append(
+        f'-job.backend.binary_path = "{escape_vc3_string(nuxmv_path)}"'
+    )
+
+    lines.append(
+        "-job.backend.timeout = 60"
+    )
+
+    # --------------------------------------------------------
+    # REQUIREMENT
+    # --------------------------------------------------------
+
+    lines.append(
+        "-job.req = pattern"
+    )
+
+    lines.append(
+        f"-job.req.pattern_id = {pattern_id}"
+    )
+
+    # --------------------------------------------------------
+    # PARAMETERS
+    # --------------------------------------------------------
+
+    def parameter_sort_key(item):
+
+        key = str(item)
+
+        try:
+
+            return (
+                0,
+                int(key)
+            )
+
+        except ValueError:
+
+            return (
+                1,
+                key
+            )
+
+    for key in sorted(
+        pattern_params.keys(),
+        key=parameter_sort_key
+    ):
+
+        value = escape_vc3_string(
+            pattern_params[key]
+        )
+
+        lines.append(
+            f'-job.req.pattern_params.{key} = "{value}"'
+        )
+
+    # --------------------------------------------------------
+    # REPORTER
+    # --------------------------------------------------------
+
+    lines.append(
+        "-job.reporters.0 = plaintext"
+    )
+
+    # --------------------------------------------------------
+    # STEP7 FRONTEND
+    # --------------------------------------------------------
+
+    lines.append(
+        "-lf = step7"
+    )
+
+    lines.append(
+        "-lf.compiler = Step7v55"
+    )
+
+    lines.append(
+        f"-lf.entry = {fb_name}"
+    )
+
+    # --------------------------------------------------------
+    # SOURCE
+    # --------------------------------------------------------
+
+    lines.append(
+        f"-sourcefiles.0 = {source_file.name}"
+    )
+
+    return "\n".join(lines) + "\n"
+
+
+# ============================================================
+# CLASSIFY RESULT
+# ============================================================
+
+def classify_plcverif_result(output):
+
+    output_upper = output.upper()
+
+    if "**RESULT: THE REQUIREMENT IS SATISFIED**" in output_upper:
+
+        return "SATISFIED"
+
+    if "**RESULT: THE REQUIREMENT IS VIOLATED**" in output_upper:
+
+        return "VIOLATED"
+
+    if "**RESULT: THE REQUIREMENT IS ERROR**" in output_upper:
+
+        return "ERROR"
+
+    error_patterns = [
+        "VERIFICATION PROBLEM IS NOT AVAILABLE",
+        "ERROR HAPPENED IN NUSMV BACKEND",
+        "ERROR HAPPENED IN NUXMV BACKEND",
+        "ERROR ON NUSMV EXECUTION",
+        "ERROR ON NUXMV EXECUTION",
+        "NUSMV EXECUTION ERROR",
+        "NUXMV EXECUTION ERROR",
+        "NUSMV ERROR",
+        "NUXMV ERROR",
+        "EXCEPTION",
+        "ERROR:",
+        "FAILED",
+    ]
+
+    for pattern in error_patterns:
+
+        if pattern in output_upper:
+
+            return "ERROR"
+
+    return "UNKNOWN"
+
+
+# ============================================================
+# RUN PLCVERIF
+# ============================================================
+
+def run_plcverif(vc3_file):
+
+    command = [
+        str(PLCVERIF),
+        str(vc3_file),
+        "-data",
+        ".",
+        "-consoleLog",
+    ]
+
+    print()
+    print("=" * 75)
+    print("RUNNING PLCVERIF WITH NUSMV / NUXMV")
+    print("=" * 75)
+
+    print(
+        " ".join(command)
+    )
+
+    print()
+
+    try:
+
+        result = subprocess.run(
+            command,
+            cwd=SCRIPT_DIR,
+            text=True,
+            capture_output=True
+        )
+
+    except FileNotFoundError:
+
+        print(
+            "ERROR: PLCverif executable not found:"
+        )
+
+        print(
+            PLCVERIF
+        )
+
+        return {
+            "status": "ERROR",
+            "return_code": -1,
+            "output": ""
+        }
+
+    output = ""
+
+    if result.stdout:
+
+        output += result.stdout
+
+    if result.stderr:
+
+        output += "\n" + result.stderr
+
+    print(output)
+
+    status = classify_plcverif_result(
+        output
+    )
+
+    return {
+        "status": status,
+        "return_code": result.returncode,
+        "output": output
+    }
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    if len(sys.argv) != 2:
+
+        print(
+            "Usage:"
+        )
+
+        print(
+            "  python3 run_plcverif_json.py <JSON_FILE>"
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # JSON
+    # --------------------------------------------------------
+
+    json_file = Path(
+        sys.argv[1]
+    ).resolve()
+
+    if not json_file.exists():
+
+        print(
+            f"ERROR: JSON file does not exist:\n{json_file}"
+        )
+
+        sys.exit(1)
+
+    if json_file.suffix.lower() != ".json":
+
+        print(
+            "ERROR: Input must be a .json file."
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # PLCVERIF
+    # --------------------------------------------------------
+
+    if not PLCVERIF.exists():
+
+        print(
+            "ERROR: PLCverif executable was not found:"
+        )
+
+        print(
+            PLCVERIF
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # NUXMV
+    # --------------------------------------------------------
+
+    nuxmv_path = find_nuxmv()
+
+    if nuxmv_path is None:
+
+        print(
+            "ERROR: nuXmv/NuSMV executable was not found."
+        )
+
+        print(
+            "Expected location:"
+        )
+
+        print(
+            SCRIPT_DIR.parent
+            / "nuXmv-2.2.0-linux64"
+            / "usr/local/bin/nuXmv"
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # READ JSON
+    # --------------------------------------------------------
+
+    try:
+
+        with open(
+            json_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            data = json.load(file)
+
+    except json.JSONDecodeError as error:
+
+        print(
+            "ERROR: Invalid JSON."
+        )
+
+        print(
+            error
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # SOURCE
+    # --------------------------------------------------------
+
+    try:
+
+        source_file = find_source_file(
+            json_file
+        )
+
+    except Exception as error:
+
+        print(
+            "ERROR finding SCL/ST source:"
+        )
+
+        print(
+            error
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # FUNCTION BLOCK
+    # --------------------------------------------------------
+
+    try:
+
+        fb_name = find_function_block_name(
+            source_file
+        )
+
+    except Exception as error:
+
+        print(
+            "ERROR finding FUNCTION_BLOCK:"
+        )
+
+        print(
+            error
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # PROPERTIES
+    # --------------------------------------------------------
+
+    properties = data.get(
+        "properties_to_be_validated",
+        []
+    )
+
+    if not properties:
+
+        print(
+            "ERROR: JSON contains no "
+            "'properties_to_be_validated'."
+        )
+
+        sys.exit(1)
+
+    # ========================================================
+    # HEADER
+    # ========================================================
+
+    print()
+    print("=" * 75)
+    print("GENERIC PLCVERIF JSON RUNNER")
+    print("=" * 75)
+
+    print(
+        f"JSON file       : {json_file}"
+    )
+
+    print(
+        f"Source file     : {source_file}"
+    )
+
+    print(
+        f"FUNCTION_BLOCK  : {fb_name}"
+    )
+
+    print(
+        f"Dataset ID      : {data.get('id', 'N/A')}"
+    )
+
+    print(
+        f"Properties      : {len(properties)}"
+    )
+
+    print(
+        f"PLCverif        : {PLCVERIF}"
+    )
+
+    print(
+        f"NuSMV / nuXmv   : {nuxmv_path}"
+    )
+
+    print("=" * 75)
+
+    # ========================================================
+    # OUTPUT DIRECTORY
+    # ========================================================
+
+    output_dir = (
+        json_file.parent
+        / f"{json_file.stem}_vc3"
+    )
+
+    output_dir.mkdir(
+        exist_ok=True
+    )
+
+    results = []
+
+    # ========================================================
+    # PROCESS PROPERTIES
+    # ========================================================
+
+    for index, property_data in enumerate(
+        properties,
+        start=1
+    ):
+
+        print()
+        print("=" * 75)
+        print(f"PROPERTY {index}")
+        print("=" * 75)
+
+        description = property_data.get(
+            "property_description",
+            ""
+        )
+
+        print(
+            "Description:"
+        )
+
+        print(
+            description
+        )
+
+        prop = property_data.get(
+            "property",
+            {}
+        )
+
+        job_req = prop.get(
+            "job_req"
+        )
+
+        print(
+            f"\njob_req: {job_req}"
+        )
+
+        # ----------------------------------------------------
+        # ASSERTION
+        # ----------------------------------------------------
+
+        if job_req == "assertion":
+
+            print(
+                "\nSTATUS: SKIPPED_UNSUPPORTED"
+            )
+
+            print(
+                "Reason: assertion properties are skipped."
+            )
+
+            results.append(
+                {
+                    "property": index,
+                    "status": "SKIPPED_UNSUPPORTED",
+                    "job_req": "assertion"
+                }
+            )
+
+            continue
+
+        # ----------------------------------------------------
+        # OTHER UNSUPPORTED
+        # ----------------------------------------------------
+
+        if job_req != "pattern":
+
+            print(
+                "\nSTATUS: SKIPPED_UNSUPPORTED"
+            )
+
+            print(
+                f"Reason: unsupported job_req='{job_req}'."
+            )
+
+            results.append(
+                {
+                    "property": index,
+                    "status": "SKIPPED_UNSUPPORTED",
+                    "job_req": job_req
+                }
+            )
+
+            continue
+
+        print(
+            f"pattern_id: {prop.get('pattern_id')}"
+        )
+
+        print(
+            f"pattern_params: {prop.get('pattern_params')}"
+        )
+
+        # ====================================================
+        # CREATE VC3
+        # ====================================================
+
+        try:
+
+            vc3_content = create_vc3(
+                data,
+                property_data,
+                index,
+                source_file,
+                fb_name,
+                nuxmv_path
+            )
+
+            vc3_file = (
+                output_dir
+                / f"{json_file.stem}_property_{index}.vc3"
+            )
+
+            vc3_file.write_text(
+                vc3_content,
+                encoding="utf-8"
+            )
+
+            print(
+                "\nGenerated VC3:"
+            )
+
+            print(
+                vc3_file
+            )
+
+            print(
+                "\n--- GENERATED VC3 ---"
+            )
+
+            print(
+                vc3_content
+            )
+
+            print(
+                "--- END VC3 ---"
+            )
+
+        except Exception as error:
+
+            print(
+                f"ERROR generating VC3 "
+                f"for property {index}:"
+            )
+
+            print(
+                error
+            )
+
+            results.append(
+                {
+                    "property": index,
+                    "status": "GENERATION_ERROR",
+                    "error": str(error)
+                }
+            )
+
+            continue
+
+        # ====================================================
+        # RUN PLCVERIF
+        # ====================================================
+
+        verification = run_plcverif(
+            vc3_file
+        )
+
+        status = verification[
+            "status"
+        ]
+
+        return_code = verification[
+            "return_code"
+        ]
+
+        results.append(
+            {
+                "property": index,
+                "pattern": prop.get(
+                    "pattern_id"
+                ),
+                "status": status,
+                "return_code": return_code,
+                "vc3": str(vc3_file)
+            }
+        )
+
+        print()
+        print("PROPERTY RESULT")
+
+        print(
+            f"  Verification : {status}"
+        )
+
+        print(
+            f"  Return code  : {return_code}"
+        )
+
+    # ========================================================
+    # SUMMARY
+    # ========================================================
+
+    print()
+    print("=" * 75)
+    print("FINAL SUMMARY")
+    print("=" * 75)
+
+    for result in results:
+
+        print(
+            f"\nProperty {result['property']} : "
+            f"{result['status']}"
+        )
+
+        if "pattern" in result:
+
+            print(
+                f"  Pattern       : {result['pattern']}"
+            )
+
+        if "return_code" in result:
+
+            print(
+                f"  Return code   : {result['return_code']}"
+            )
+
+        if "vc3" in result:
+
+            print(
+                f"  VC3           : {result['vc3']}"
+            )
+
+    print()
+    print("=" * 75)
+
+    statuses = [
+        result["status"]
+        for result in results
+    ]
+
+    if "ERROR" in statuses:
+
+        overall = "ERROR"
+
+    elif "VIOLATED" in statuses:
+
+        overall = "VIOLATED"
+
+    elif "GENERATION_ERROR" in statuses:
+
+        overall = "ERROR"
+
+    elif "UNKNOWN" in statuses:
+
+        overall = "UNKNOWN"
+
+    elif (
+        statuses
+        and all(
+            status in [
+                "SATISFIED",
+                "SKIPPED_UNSUPPORTED"
+            ]
+            for status in statuses
+        )
+    ):
+
+        overall = "SATISFIED"
+
+    else:
+
+        overall = "COMPLETED"
+
+    print(
+        f"OVERALL RESULT: {overall}"
+    )
+
+    print("=" * 75)
+
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
+
+if __name__ == "__main__":
+
+    main()

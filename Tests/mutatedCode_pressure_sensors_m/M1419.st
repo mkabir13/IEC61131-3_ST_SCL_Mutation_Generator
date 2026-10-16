@@ -1,0 +1,60 @@
+FUNCTION_BLOCK "MAIN"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+
+VAR_OUTPUT
+    Done : Bool;              // TRUE when the operation has completed
+END_VAR
+
+VAR
+    presure_sensor : UInt := 10;
+    temp_sensor : Int := 2;
+    relay : Bool := TRUE;
+    counter : UInt;
+    error_code : Int;
+    error : Bool := TRUE;
+    GT1_OUT : Bool;
+END_VAR
+
+BEGIN
+
+    // IEC "PROGRAM MAIN" implemented as an SCL function block so it can be
+    // instantiated and verified (properties refer to instance.<variable>).
+
+    #Done := FALSE;
+
+    // Loop through the pressure sensor samples
+    #counter := 0;
+    WHILE #counter < #presure_sensor DO
+
+        #counter := #counter + 1;
+
+        // Adjust the temperature sensor value, with overflow protection
+        IF #temp_sensor < 32767 THEN
+            #temp_sensor := #temp_sensor + 2; (* MUTATED: CONST_VALUE_REPLACE *)
+        ELSE
+            // Increment would overflow INT: hold the value and flag it
+            #temp_sensor := 32767;
+            #error_code := 1;
+            #error := TRUE;
+        END_IF;
+
+    END_WHILE;
+
+    // Comparator: all pressure samples processed
+    #GT1_OUT := #counter >= #presure_sensor;
+
+    // Relay follows GT1_OUT
+    #relay := #GT1_OUT;
+
+    // Error flag is latched; it is never cleared by this block
+    #error := TRUE;
+
+    // Signal completion
+    #Done := TRUE;
+
+    //#ASSERT temp_sensor <= 32767
+    //#ASSERT error = TRUE
+    //#ASSERT NOT GT1_OUT OR relay
+
+END_FUNCTION_BLOCK

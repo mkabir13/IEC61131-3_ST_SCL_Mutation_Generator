@@ -1,0 +1,46 @@
+{
+    "id": "v1-M-1",
+    "instruction": "Design a PLC program using structured text (ST code) that incorporates pressure sensors,\ntemperature sensors, relays, counters, error codes, and error flags as inputs.\nThe program must loop through the pressure sensor, adjust the temperature sensor\nbased on specific conditions, and update the relay status according to the value of GT1_OUT.\nEnsure that the program checks for conditions to avoid overflow and maintains the error flag state.\nReturn a Boolean value indicating the completion of the operation.\n\nPROGRAM MAIN\nVAR\npresure_sensor : UINT := 10;\ntemp_sensor : INT := 2;\nrelay : BOOL := TRUE;\ncounter : UINT;\nerror_code : INT;\nerror : BOOL := TRUE;\nGT1_OUT : BOOL;\nEND_VAR\n\nEND_PROGRAM",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Verify that the relay is updated based on the value of GT1_OUT.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.GT1_OUT = TRUE",
+                    "2": "instance.relay = TRUE"
+                },
+                "pattern_description": "If 'instance.GT1_OUT = TRUE' is true at the end of the PLC cycle, then 'instance.relay = TRUE' should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the temp_sensor does not overflow during the FOR loop.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-forbidden",
+                "pattern_params": {
+                    "1": "instance.temp_sensor > 32767"
+                },
+                "pattern_description": "'instance.temp_sensor > 32767' is impossible at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the error flag is not set to FALSE.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-forbidden",
+                "pattern_params": {
+                    "1": "instance.error = FALSE"
+                },
+                "pattern_description": "'instance.error = FALSE' is impossible at the end of the PLC cycle."
+            }
+        }
+    ]
+}

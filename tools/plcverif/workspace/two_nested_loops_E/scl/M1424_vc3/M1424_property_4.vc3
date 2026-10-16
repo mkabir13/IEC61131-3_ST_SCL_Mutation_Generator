@@ -1,0 +1,15 @@
+-description = "Ensure that j does not exceed its bounds (10 to 100)."
+-id = verify_v1_E_3_property_4
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-invariant
+-job.req.pattern_params.1 = "instance.j >= 10 AND instance.j <= 100"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_NestedLoopControl
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/two_nested_loops_E/scl/M1424.scl"

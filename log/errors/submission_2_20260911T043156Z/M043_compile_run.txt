@@ -1,0 +1,28 @@
+Submission: 2
+Mutant: M043
+Result: FAILED
+
+=== MERGE (python mergeSTcode.py) ===
+========================================
+ST Code Merge Successful
+========================================
+Output: /home/mkabir/Desktop/mutate/Tests/TestCode.st
+
+Merge order:
+  1. 1 Library.txt
+  2. 2 mutatecode.txt
+  3. 3 Programcontroller.txt
+  4. 4 Config.txt
+========================================
+
+
+=== COMPILE / RUN (statement.sh) ===
+===== STEP 0: SAFE LOG ROTATION =====
+===== STEP 1: Cleaning old build and coverage files =====
+===== STEP 2: Moving to MATIEC directory =====
+===== STEP 3: Compiling ST code with MATIEC =====
+✅ MATIEC compilation successful.
+===== STEP 4: Moving generated files to Output =====
+===== STEP 6: Compiling C code with GCC + GCOV =====
+
+

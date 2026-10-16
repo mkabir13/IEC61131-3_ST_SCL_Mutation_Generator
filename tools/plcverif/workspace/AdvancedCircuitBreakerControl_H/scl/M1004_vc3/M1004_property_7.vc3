@@ -1,0 +1,16 @@
+-description = "Ensure that if either PPAL1 or PP2 is true at the end of the cycle, PUWS_AL1_B1_PLUS should be set to 1 and PUWS_AL1_B1_RIGHT should be set to 0."
+-id = verify_v2_H_3_property_7
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "instance.PPAL1 OR instance.PP2"
+-job.req.pattern_params.2 = "(instance.PUWS_AL1_B1_PLUS = TRUE) AND (NOT instance.PUWS_AL1_B1_RIGHT)"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_AdvancedCircuitBreakerControl
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/AdvancedCircuitBreakerControl_H/scl/M1004.scl"

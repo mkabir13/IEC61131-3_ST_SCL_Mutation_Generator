@@ -1,0 +1,408 @@
+{
+  "dataset_id": "v2-H-1",
+  "source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474.scl",
+  "verified_source": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474.scl",
+  "source_preparation": [],
+  "source_warnings": [],
+  "backend": "nusmv",
+  "algorithm": "Ic3",
+  "overall": "ERROR",
+  "properties": [
+    {
+      "property": 1,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_1 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_1.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 2,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_1 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "VIOLATED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_2.vc3",
+      "status": "VIOLATED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 3,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_2 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_3.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 4,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_2 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_4.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 5,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_12 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_5.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 6,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B10_12 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_6.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 7,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B54 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_7.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 8,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B54 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "ERROR"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_8.vc3",
+      "status": "ERROR",
+      "reason": "Error occurred in NuSMV backend: Unable to parse the output of NuSMV (based on the console output or the output file).",
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 9,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B55 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_9.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 10,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B55 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_10.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 11,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B56 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_11.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 12,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B56 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_12.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 13,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B57 correctly transitions to closed when it receives the close signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_13.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 14,
+      "job_req": "pattern",
+      "description": "Ensure that Breaker B57 correctly transitions to opened when it receives the trip signal.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_14.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 15,
+      "job_req": "pattern",
+      "description": "Ensure that Point_1a is correctly calculated based on the state of Breakers B54, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_15.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 16,
+      "job_req": "pattern",
+      "description": "Ensure that Point_1a is correctly calculated based on the state of Breakers B54, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_16.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 17,
+      "job_req": "pattern",
+      "description": "Ensure that Point_2a is correctly calculated based on the state of Breakers B55, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_17.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 18,
+      "job_req": "pattern",
+      "description": "Ensure that Point_2a is correctly calculated based on the state of Breakers B55, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_18.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 19,
+      "job_req": "pattern",
+      "description": "Ensure that Point_3a is correctly calculated based on the state of Breakers B56, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_19.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 20,
+      "job_req": "pattern",
+      "description": "Ensure that Point_3a is correctly calculated based on the state of Breakers B56, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_20.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 21,
+      "job_req": "pattern",
+      "description": "Ensure that Point_4a is correctly calculated based on the state of Breakers B57, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_21.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    },
+    {
+      "property": 22,
+      "job_req": "pattern",
+      "description": "Ensure that Point_4a is correctly calculated based on the state of Breakers B57, B10_12, B10_1, and B10_2.",
+      "entry": "FB_BreakerControlSystem",
+      "notes": [],
+      "attempts": [
+        {
+          "algorithm": "Ic3",
+          "status": "SATISFIED"
+        }
+      ],
+      "vc3": "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/multiple_breakers_management_H/scl/M1474_vc3/M1474_property_22.vc3",
+      "status": "SATISFIED",
+      "reason": null,
+      "return_code": 0,
+      "algorithm": "Ic3"
+    }
+  ]
+}

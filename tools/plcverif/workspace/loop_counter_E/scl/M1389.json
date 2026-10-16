@@ -1,0 +1,45 @@
+{
+    "id": "v1-E-4",
+    "instruction": " Design a PLC program using structured text (ST code) that implements a function block for a loop counter.\nThe function block should include the following features:\n\n- The counter is incremented on each call, with the macro variable representing the current count\nand micro controlling the decrementing cycle.\n- The function block should return the current value of the counter through the output variable o.\n- On each invocation, if micro reaches zero, the macro variable should be incremented by 1, and micro should be reset to the new value of macro.\n- The program should manage the state of both macro and micro to ensure they do not go negative\nand that the output value o is always a positive integer.\n\nFUNCTION_BLOCK FB_LoopCounter\nVAR_INPUT\ni : BOOL;  // Trigger input for the counter\nEND_VAR\nVAR\nmacro : INT := 1;  // Current count\nmicro : INT := 1;  // Control variable for counting down\nEND_VAR\nVAR_OUTPUT\no : INT;  // Current value of the counter\nEND_VAR\n\nEND_FUNCTION_BLOCK ",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Verify that all assertions are satisfied in the program.",
+            "property": {
+                "job_req": "assertion"
+            }
+        },
+        {
+            "property_description": "Verify that micro does not become negative.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-forbidden",
+                "pattern_params": {
+                    "1": "instance.micro < 0"
+                },
+                "pattern_description": "{1} is impossible at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that macro does not become negative.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-forbidden",
+                "pattern_params": {
+                    "1": "instance.macro < 0"
+                },
+                "pattern_description": "{1} is impossible at the end of the PLC cycle."
+            }
+        },
+        {
+            "property_description": "Verify that the output o is always a positive integer.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-invariant",
+                "pattern_params": {
+                    "1": "instance.o > 0"
+                },
+                "pattern_description": "{1} is always true at the end of the PLC cycle."
+            }
+        }
+    ]
+}

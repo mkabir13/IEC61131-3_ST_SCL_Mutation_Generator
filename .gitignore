@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Credentials
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# IDE files
+.idea/
+.vscode/
+
+# Python environments and caches
+tools/.venv/
+__pycache__/
+*.py[cod]
+
+# Local credentials
+.env
+.env.*
+
+# Generated mutation logs and large test outputs
+log/mutations/
+Tests/mutatedCode_Arbiter/
+
+# PLCVerif generated verification output
+tools/plcverif/workspace/output/
+
+# Downloaded Java installers and extracted runtimes
+tools/plcverif/*.tar.gz
+tools/plcverif/jdk-*/
+tools/plcverif/OpenJDK*/
+
+# MATIEC build artifacts (safe to delete, can be regenerated with ./configure && make)
+matiec/config.log
+matiec/config.status
+matiec/Makefile
+matiec/autom4te.cache/
+matiec/**/*.o
+matiec/**/*.a
+
+# nuXmv archives and extracted binaries 
+# (Best practice: provide a setup.sh script to download these instead of committing them)
+tools/plcverif/tools/nuxmv/*.tar.xz
+tools/plcverif/tools/nuxmv/nuXmv-*/

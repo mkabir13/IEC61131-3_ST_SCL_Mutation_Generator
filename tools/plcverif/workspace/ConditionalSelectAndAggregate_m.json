@@ -1,0 +1,30 @@
+{
+    "instruction": "Create a function block in Structured Text (ST) that selects a value based on a condition and then performs an aggregation. The function block should have the following characteristics:\n\nName: FB_ConditionalSelectAndAggregate\nInput/Output variables:\n\nVAR_INPUT\nZ : INT;  // External input value for comparison and potential selection\nVAR_OUTPUT\nNEW_Z : INT;  // Result of the selection and aggregation\n\n\nInternal constants:\n\nA_X : INT := 42;  // Threshold for comparison\nA_Y : INT := 333; // Alternative value for selection\n\n\nLogic:\na. Conditional Selection:\n\nIf A_X > Z, select A_Y\nOtherwise, select Z\nStore the selected value in NEW_Z\nb. Aggregation:\nAdd A_X and A_Y to the selected value in NEW_Z\n\n\nImplementation notes:\n\nDo not include comments in the function block\nEnsure the selection occurs before the aggregation\nUse a single assignment for NEW_Z in each branch of the condition\nPerform the final aggregation in a separate statement\n\nFUNCTION_BLOCK FB_ConditionalSelectAndAggregate\nVAR_INPUT\nZ : INT;\nEND_VAR\nVAR\nA_X : INT := 42;\nA_Y : INT := 333;\nEND_VAR\nVAR_OUTPUT\nNEW_Z : INT;\nEND_VAR\n\nEND_FUNCTION_BLOCK",
+    "properties_to_be_validated": [
+        {
+            "property_description": "Ensure that when A_X (42) is greater than OLD_Z, NEW_Z is equal to A_X plus twice A_Y.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "instance.ax > instance.old_z",
+                    "2": "instance.newz = instance.ax + instance.ay * 2"
+                },
+                "pattern_description": "If {instance.ax > instance.old_z} is true at the end of the PLC cycle, then {instance.newz = instance.ax + instance.ay * 2} should always be true at the end of the same cycle."
+            }
+        },
+        {
+            "property_description": "Ensure that when A_X (42) is not greater than OLD_Z, NEW_Z is equal to A_X plus A_Y plus OLD_Z.",
+            "property": {
+                "job_req": "pattern",
+                "pattern_id": "pattern-implication",
+                "pattern_params": {
+                    "1": "NOT (instance.ax > instance.old_z)",
+                    "2": "instance.newz = instance.ax + instance.ay + instance.old_z"
+                },
+                "pattern_description": "If {NOT (instance.ax > instance.old_z)} is true at the end of the PLC cycle, then {instance.newz = instance.ax + instance.ay + instance.old_z} should always be true at the end of the same cycle."
+            }
+        }
+    ],
+    "id": "v2-M-38"
+}

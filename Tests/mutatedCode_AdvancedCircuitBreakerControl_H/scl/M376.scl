@@ -1,0 +1,198 @@
+FUNCTION_BLOCK "FB_AdvancedCircuitBreakerControl"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+
+VAR_INPUT
+    S_AL1_P_B1 : Bool;
+    S_AL1_P_B2 : Bool;
+    S_AL1_MCB : Bool;
+    MCB_BUSY : Bool;
+    MCB_ERROR : Bool;
+    S_AL1_MCBR : Bool;
+    MCBR_BUSY : Bool;
+    MCBR_ERROR : Bool;
+    S_AL1_P_B3 : Bool;
+    S_AL1_MCB2 : Bool;
+    S_AL1_MCBR2 : Bool;
+END_VAR
+
+VAR_OUTPUT
+    E_AL1_B1 : Bool;
+    PUWS_AL1_B1_PLUS : Bool;
+    PUWS_AL1_B1_RIGHT : Bool;
+    PAS_AL1_PLUS : Bool;
+    PAS_AL1_TURN : Bool;
+END_VAR
+
+VAR
+    PPAL1 : Bool := TRUE;
+    PP0 : Bool := FALSE; // MUTATED: BOOL_CONST_REPLACE
+    PP1 : Bool := FALSE;
+    PP2 : Bool := FALSE;
+    PP3 : Bool := FALSE;
+    PP4 : Bool := FALSE;
+    MCB : Bool := TRUE;
+    PP5 : Bool := FALSE;
+    PP7 : Bool := FALSE;
+    PPL3 : Bool := FALSE;
+    PPL4 : Bool := FALSE;
+    MCBR : Bool := TRUE;
+    PPL5 : Bool := FALSE;
+    PPL7 : Bool := FALSE;
+    STABLE : Bool := FALSE;
+    MCB_CONTROL : Bool;
+END_VAR
+
+VAR_TEMP
+    LoopGuard : Int;   // Iteration limit for the stabilisation loop
+END_VAR
+
+BEGIN
+
+    // ---------------------------------------------------------------
+    // State transitions: repeat until no transition fires (STABLE).
+    // LoopGuard bounds the loop: with some input combinations the
+    // transition net can cycle forever inside one scan, which would
+    // trip the CPU watchdog (scan-cycle time exceeded).
+    // ---------------------------------------------------------------
+    #STABLE := FALSE;
+    #LoopGuard := 0;
+
+    WHILE (NOT #STABLE) AND (#LoopGuard < 50) DO
+
+        #LoopGuard := #LoopGuard + 1;
+        #STABLE := TRUE;
+
+        // PP0 -> PP1 : first activation
+        IF #PP0 AND NOT #MCB_CONTROL AND NOT #PP1 THEN
+            #PP0 := FALSE;
+            #PP1 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP1 -> PP2 : first button pressed
+        IF #PP1 AND #S_AL1_P_B1 AND NOT #PP2 THEN
+            #PP1 := FALSE;
+            #PP2 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP2 -> PP3 : second button, breaker not under control
+        IF #PP2 AND #S_AL1_P_B2 AND NOT #MCB_CONTROL AND NOT #PP3 THEN
+            #PP2 := FALSE;
+            #PP3 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP3 -> PP4 (+PP1) : main circuit breaker closed
+        IF #PP3 AND #S_AL1_MCB AND NOT #PP4 AND NOT #PP1 THEN
+            #PP3 := FALSE;
+            #PP4 := TRUE;
+            #PP1 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP4 -> PP5 : circuit breaker busy
+        IF #PP4 AND #MCB AND #MCB_BUSY AND NOT #PP5 THEN
+            #PP4 := FALSE;
+            #MCB := FALSE;
+            #PP5 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP5 -> PP7 : second circuit breaker
+        IF #PP5 AND #S_AL1_MCB2 AND NOT #PP7 AND NOT #MCB THEN
+            #PP5 := FALSE;
+            #PP7 := TRUE;
+            #MCB := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP7 -> end : operation complete
+        IF #PP7 AND #S_AL1_P_B3 THEN
+            #PP7 := FALSE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PP2 -> PPL3 (+PP1) : second button with breaker under control
+        IF #PP2 AND #S_AL1_P_B2 AND #MCB_CONTROL AND NOT #PPL3 AND NOT #PP1 THEN
+            #PP2 := FALSE;
+            #PPL3 := TRUE;
+            #PP1 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PPL3 -> PPL4 : reverse circuit breaker activated
+        IF #PPL3 AND #S_AL1_MCBR AND NOT #PPL4 THEN
+            #PPL3 := FALSE;
+            #PPL4 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PPL4 -> PPL5 : reverse circuit breaker busy
+        IF #PPL4 AND #MCBR AND #MCBR_BUSY AND NOT #PPL5 THEN
+            #PPL4 := FALSE;
+            #MCBR := FALSE;
+            #PPL5 := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PPL5 -> PPL7 : second reverse circuit breaker
+        IF #PPL5 AND #S_AL1_MCBR2 AND NOT #PPL7 AND NOT #MCBR THEN
+            #PPL5 := FALSE;
+            #PPL7 := TRUE;
+            #MCBR := TRUE;
+            #STABLE := FALSE;
+        END_IF;
+
+        // PPL7 -> end : reverse operation complete
+        IF #PPL7 AND #S_AL1_P_B3 THEN
+            #PPL7 := FALSE;
+            #STABLE := FALSE;
+        END_IF;
+
+    END_WHILE;
+
+    // ---------------------------------------------------------------
+    // Output control: set actions first, reset actions last
+    // (reset has priority when both apply)
+    // ---------------------------------------------------------------
+    IF #PP0 OR #PP1 THEN
+        #E_AL1_B1 := TRUE;
+    END_IF;
+
+    IF #PP3 THEN
+        #MCB_CONTROL := TRUE;
+    END_IF;
+
+    IF #PPL3 OR #PPL4 THEN
+        #PAS_AL1_PLUS := TRUE;
+        #PAS_AL1_TURN := TRUE;
+    END_IF;
+
+    IF #PPAL1 OR #PP2 THEN
+        #PUWS_AL1_B1_PLUS := TRUE;
+    END_IF;
+
+    IF #PP2 OR #PP3 OR #PPL3 THEN
+        #E_AL1_B1 := FALSE;
+    END_IF;
+
+    IF #PP0 OR #PPL3 THEN
+        #MCB_CONTROL := FALSE;
+    END_IF;
+
+    IF #PP0 OR #PP3 OR #PP4 THEN
+        #PAS_AL1_PLUS := FALSE;
+        #PAS_AL1_TURN := FALSE;
+    END_IF;
+
+    IF #PPAL1 OR #PP2 THEN
+        #PUWS_AL1_B1_RIGHT := FALSE;
+    END_IF;
+
+    //#ASSERT NOT (PP2 OR PP3 OR PPL3) OR NOT E_AL1_B1
+    //#ASSERT NOT (PP0 OR PPL3) OR NOT MCB_CONTROL
+    //#ASSERT NOT (PP0 OR PP3 OR PP4) OR (NOT PAS_AL1_PLUS AND NOT PAS_AL1_TURN)
+
+END_FUNCTION_BLOCK

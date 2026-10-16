@@ -1,0 +1,16 @@
+-description = "Verify that the motor is not considered critical if the pressure is above or equal to the threshold."
+-id = verify_v1_E_1_property_1
+-job = verif
+-job.backend = nusmv
+-job.backend.algorithm = Ic3
+-job.backend.binary_path = "/home/mkabir/Desktop/mutate/tools/plcverif/tools/nuxmv/nuXmv-2.2.0-linux64/usr/local/bin/nuXmv"
+-job.backend.timeout = 60
+-job.req = pattern
+-job.req.pattern_id = pattern-implication
+-job.req.pattern_params.1 = "instance.Pressure_LOW >= 36464"
+-job.req.pattern_params.2 = "instance.Motor_Critical = FALSE"
+-job.reporters.0 = plaintext
+-lf = step7
+-lf.compiler = Step7v55
+-lf.entry = FB_MotorControl
+-sourcefiles.0 = "/home/mkabir/Desktop/mutate/tools/plcverif/workspace/motor_ag4plc/scl/M1394.scl"

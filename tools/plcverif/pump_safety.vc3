@@ -1,0 +1,18 @@
+[General]
+id=case_pump_scl_safety
+name=SCL Pump Control Verification
+description=Formal verification of the SCL Pump Control Block safety properties. 
+ 
+[Source]
+file=./pump.st
+top_pou=PumpControl
+ 
+[Backend]
+tool=nuXmv
+representation=interleaved 
+ 
+[Requirement]
+type=pattern
+pattern="If alpha is true at the end of the PLC cycle, then beta should always be true."
+alpha="#HighLevelSensor == TRUE"
+beta="#BackupPump == TRUE" 
